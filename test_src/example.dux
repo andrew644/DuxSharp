@@ -1,0 +1,6 @@
+
+
+fn main() {
+	cat = "my cool cat"
+	cat_with_type: string = "cooler cat"
+}

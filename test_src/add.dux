@@ -1,0 +1,13 @@
+package my_math // The functions in this file are stored in the my_math package
+
+fn add(a: i32, b: i32) -> i32 {
+	return a + b
+}
+
+fn max(a: i32, b:i32) -> i32 {
+	if a > b {
+		return a
+	}
+
+	return b;
+}
