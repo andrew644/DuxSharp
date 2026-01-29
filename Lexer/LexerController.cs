@@ -1,25 +1,26 @@
-using System.Diagnostics.Tracing;
 using DuxSharp.Extension;
 
 namespace DuxSharp.Lexer;
 
 public class LexerController
 {
-    private List<Token> tokens = [];
+    private readonly List<Token> _tokens = [];
     
-    private int line = 0;
-    private int column = 0;
-    private int index = 0;
-    private int tokenStart = 0;
-    private string file;
+    private int _line;
+    private int _column;
+    private int _index;
+    private int _tokenStart;
+    private int _tokenStartColumn;
+    private string _file = "";
     
     public List<Token> Lex(string file)
     {
-        this.file = file;
-        while (index < file.Length)
+        this._file = file;
+        while (_index < file.Length)
         {
-            tokenStart = index;
-            char c = file[index];
+            _tokenStart = _index;
+            _tokenStartColumn = _column;
+            char c = file[_index];
             switch (c)
             {
                 case ' ':
@@ -27,8 +28,8 @@ public class LexerController
                 case '\r':
                     break;
                 case '\n':
-                    line++;
-                    column = -1; //gets set to 0 in Advance
+                    _line++;
+                    _column = -1; //gets set to 0 in Advance
                     break;
                 case '(':
                     AddToken(TokenType.OpenParen);
@@ -76,33 +77,33 @@ public class LexerController
             Advance();
         }
 
-        return tokens;
+        return _tokens;
     }
 
     private void AddToken(TokenType t)
     {
-        tokens.Add(
+        _tokens.Add(
             new Token(
-                file.Substring(tokenStart, index - tokenStart + 1),
-            line,
-            tokenStart,
+                _file.Substring(_tokenStart, _index - _tokenStart + 1),
+            _line,
+            _tokenStartColumn,
             t));
     }
 
     private char Peek(int offset = 1)
     {
-        if (offset + index >= file.Length)
+        if (offset + _index >= _file.Length)
         {
             return '\0';
         }
         
-        return file[offset + index];
+        return _file[offset + _index];
     }
     
     private void Advance()
     {
-        column++;
-        index++;
+        _column++;
+        _index++;
     }
 
     private void LexDoubleChar(char secondChar, TokenType singleCharToken, TokenType twoCharToken)
@@ -122,7 +123,7 @@ public class LexerController
     {
         while (Peek() != '"' && Peek() != '\0')
         {
-            if (Peek() == '\n') line++;
+            if (Peek() == '\n') _line++;
             Advance();
         }
 
@@ -167,7 +168,7 @@ public class LexerController
     private void LexIdentifier()
     {
         while (IsAlphaNumeric(Peek())) Advance();
-        string text = file.Substring(tokenStart, index - tokenStart);
+        string text = _file.Substring(_tokenStart, _index - _tokenStart);
         TokenType type = Keyword.Keywords.GetOrDefault(text, TokenType.Identifier);
         AddToken(type);
     }

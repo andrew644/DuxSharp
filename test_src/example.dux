@@ -1,6 +1,58 @@
+/* Feature list
 
+Optional and Result
+pattern matching like rust
+
+sum types?
+
+
+
+*/
+import std.*
+
+pub struct Cat impl printable {
+	size: i32,
+	speed: f32,
+
+	pub fn to_string() -> string {
+		return "My size is {size} and I am so fast: {speed}"
+	}
+}
 
 fn main() {
-	cat = "my cool cat"
-	cat_with_type: string = "cooler cat"
+	x = 5
+	y = 3.5
+	pi: f32 = 3.141592
+	defer println("this is done at the end of main")
+	println("hello world!")
+
+	// This is a comment
+
+	/* multi line 
+	   comment
+	*/
+
+	var my_function = fn add(a: i32, b: i32) -> i32 {
+		return a + b
+	}
+
+	my_cat = Cat{
+		size = 1,
+		speed = 2,
+	}
+
+	println(my_cat)
+
+	if pi >= 3 or pi < 4 {
+		println("p is 3 ish")
+	}
+
+	for i = 0; i < 10; i += 1 {
+		println(i)
+	}
+
+	for true {
+		// loop forever
+	}
+
 }

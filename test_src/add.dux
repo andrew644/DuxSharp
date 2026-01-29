@@ -4,10 +4,10 @@ fn add(a: i32, b: i32) -> i32 {
 	return a + b
 }
 
-fn max(a: i32, b:i32) -> i32 {
+fn max(a: i32, b: i32) -> i32 {
 	if a > b {
 		return a
 	}
 
-	return b;
+	return b
 }

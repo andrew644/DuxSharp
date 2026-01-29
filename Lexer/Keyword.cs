@@ -1,6 +1,6 @@
 namespace DuxSharp.Lexer;
 
-public class Keyword
+public static class Keyword
 {
     public static readonly Dictionary<string, TokenType> Keywords;
 
