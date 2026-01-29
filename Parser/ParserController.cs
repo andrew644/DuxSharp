@@ -63,8 +63,19 @@ public class ParserController(List<Token> tokens)
 
     private Stmt Statement()
     {
+        if (Match(TokenType.Return))
+        {
+            return ReturnStatement();
+        }
         //TODO add if, for, defer, return, block
         return ExpressionStatement();
+    }
+
+    private Stmt ReturnStatement()
+    {
+        var expr = Expression();
+        Consume(TokenType.Newline, "Expected newline at end of statement.");
+        return new Stmt.ReturnStmt(expr);
     }
 
     private Expr Expression()

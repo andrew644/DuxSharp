@@ -8,4 +8,5 @@ public abstract record Stmt
     public record Block(List<Stmt> Statements) : Stmt;
     public record Function(Token Name, List<Token> Args, List<Stmt> Body, Token? ReturnType) : Stmt;
     public record VarDeclaration(Token Name, Expr Value) : Stmt;
+    public record ReturnStmt(Expr Expr) : Stmt;
 }

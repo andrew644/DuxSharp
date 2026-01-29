@@ -56,6 +56,9 @@ public static class Printer
                     Parenthesize("params", s.Args.Select(p => p.Text)),
                     Parenthesize("body", s.Body.Select(Print))
                 ),
+            
+            Stmt.ReturnStmt s =>
+                Parenthesize("return", s.Expr),
 
             _ => throw new NotImplementedException(stmt.GetType().Name)
         };

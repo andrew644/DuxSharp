@@ -6,4 +6,6 @@ fn add() {
     test = 5 * 5
     test2 = test
     test3 = 5 * 5 + 5
+    
+    return 5
 }
