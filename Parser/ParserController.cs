@@ -19,6 +19,7 @@ public class ParserController(List<Token> tokens)
 
     private Stmt Declaration()
     {
+        MatchNewlines();
         if (Match(TokenType.Fn))
         {
             return FunctionDeclaration();
@@ -36,7 +37,9 @@ public class ParserController(List<Token> tokens)
     {
         var name = Consume(TokenType.Identifier, "Expected var name");
         Consume(TokenType.Equals, "Expected '=' after variable name.");
-        return new Stmt.VarDeclaration(name, Expression());
+        var expr = Expression();
+        Consume(TokenType.Newline, "Expected newline at end of statement.");
+        return new Stmt.VarDeclaration(name, expr);
     }
 
     private Stmt FunctionDeclaration()
@@ -60,6 +63,7 @@ public class ParserController(List<Token> tokens)
 
     private Stmt Statement()
     {
+        //TODO add if, for, defer, return, block
         return ExpressionStatement();
     }
 
@@ -133,7 +137,9 @@ public class ParserController(List<Token> tokens)
 
     private Stmt ExpressionStatement()
     {
-        return new Stmt.Expression(Expression());
+        var expr = Expression();
+        Consume(TokenType.Newline, "Expected newline at end of statement.");
+        return new Stmt.Expression(expr);
     }
 
     private List<Stmt> Block()
@@ -141,11 +147,20 @@ public class ParserController(List<Token> tokens)
         List<Stmt> statements = [];
         while (!Check(TokenType.CloseBrace) && !IsAtEnd())
         {
-            statements.Add(Declaration()); //TODO I think this should just be statements
+            MatchNewlines();
+            statements.Add(Declaration());
         }
 
         Consume(TokenType.CloseBrace, "Expected '}' after block.");
         return statements;
+    }
+
+    private void MatchNewlines()
+    {
+        while (Check(TokenType.Newline))
+        {
+            Advance();
+        }
     }
 
     public override string ToString()

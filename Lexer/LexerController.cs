@@ -6,7 +6,7 @@ public class LexerController(string file)
 {
     private readonly List<Token> _tokens = [];
     
-    private int _line;
+    private int _line = 1;
     private int _column;
     private int _index;
     private int _tokenStart;
@@ -26,6 +26,7 @@ public class LexerController(string file)
                 case '\r':
                     break;
                 case '\n':
+                    AddToken(TokenType.Newline);
                     _line++;
                     _column = -1; //gets set to 0 in Advance
                     break;
@@ -43,6 +44,9 @@ public class LexerController(string file)
                     break;
                 case '+':
                     AddToken(TokenType.Plus);
+                    break;
+                case '*':
+                    AddToken(TokenType.Star);
                     break;
                 case '/':
                     if (Peek() == '/') // Single line comments

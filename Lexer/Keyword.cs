@@ -9,15 +9,15 @@ public static class Keyword
         Keywords = new Dictionary<string, TokenType>
         {
             ["and"]    = TokenType.And,
+            ["or"]     = TokenType.Or,
+            ["if"]     = TokenType.If,
             ["else"]   = TokenType.Else,
+            ["true"]   = TokenType.True,
             ["false"]  = TokenType.False,
             ["for"]    = TokenType.For,
             ["fn"]    = TokenType.Fn,
-            ["if"]     = TokenType.If,
-            ["or"]     = TokenType.Or,
             ["return"] = TokenType.Return,
-            ["true"]   = TokenType.True,
-            ["while"]  = TokenType.While,
+            ["defer"] = TokenType.Defer,
         };
     }
 }
