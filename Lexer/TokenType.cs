@@ -3,6 +3,9 @@ namespace DuxSharp.Lexer;
 public enum TokenType
 {
     Plus,
+    Minus,
+    Star,
+    Slash,
     FnDef,
     OpenParen,
     CloseParen,

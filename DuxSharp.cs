@@ -1,4 +1,5 @@
 using DuxSharp.Lexer;
+using DuxSharp.Parser;
 
 namespace DuxSharp;
 
@@ -13,12 +14,18 @@ public static class DuxSharp
         }
         Console.WriteLine("Compiling: " + args[0]);
         
+        Console.WriteLine("\nTokens:");
         string text = File.ReadAllText(args[0]);
-        var lexerController = new LexerController();
-        List<Token> tokens = lexerController.Lex(text);
+        var lexerController = new LexerController(text);
+        List<Token> tokens = lexerController.Lex();
         foreach (var token in tokens)
         {
             Console.WriteLine(token);
         }
+        
+        Console.WriteLine("\nParsing:");
+        var parser = new ParserController(tokens);
+        parser.Parse();
+        Console.WriteLine(parser);
     }
 }

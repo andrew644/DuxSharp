@@ -2,7 +2,7 @@ using DuxSharp.Extension;
 
 namespace DuxSharp.Lexer;
 
-public class LexerController
+public class LexerController(string file)
 {
     private readonly List<Token> _tokens = [];
     
@@ -11,11 +11,9 @@ public class LexerController
     private int _index;
     private int _tokenStart;
     private int _tokenStartColumn;
-    private string _file = "";
     
-    public List<Token> Lex(string file)
+    public List<Token> Lex()
     {
-        this._file = file;
         while (_index < file.Length)
         {
             _tokenStart = _index;
@@ -84,7 +82,7 @@ public class LexerController
     {
         _tokens.Add(
             new Token(
-                _file.Substring(_tokenStart, _index - _tokenStart + 1),
+                file.Substring(_tokenStart, _index - _tokenStart + 1),
             _line,
             _tokenStartColumn,
             t));
@@ -92,12 +90,12 @@ public class LexerController
 
     private char Peek(int offset = 1)
     {
-        if (offset + _index >= _file.Length)
+        if (offset + _index >= file.Length)
         {
             return '\0';
         }
         
-        return _file[offset + _index];
+        return file[offset + _index];
     }
     
     private void Advance()
@@ -168,7 +166,7 @@ public class LexerController
     private void LexIdentifier()
     {
         while (IsAlphaNumeric(Peek())) Advance();
-        string text = _file.Substring(_tokenStart, _index - _tokenStart);
+        string text = file.Substring(_tokenStart, _index - _tokenStart + 1);
         TokenType type = Keyword.Keywords.GetOrDefault(text, TokenType.Identifier);
         AddToken(type);
     }
