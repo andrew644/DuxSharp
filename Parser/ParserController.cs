@@ -19,6 +19,7 @@ public class ParserController(List<Token> tokens)
 
     private Stmt Declaration()
     {
+        //TODO catch parsing errors and synchronize
         MatchNewlines();
         if (Match(TokenType.Fn))
         {
@@ -102,6 +103,9 @@ public class ParserController(List<Token> tokens)
         return token.Type switch
         {
             TokenType.Number =>
+                new Expr.Literal(token.Text),
+            
+            TokenType.String =>
                 new Expr.Literal(token.Text),
 
             TokenType.Identifier =>

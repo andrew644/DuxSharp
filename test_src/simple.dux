@@ -1,3 +1,5 @@
+global = "test"
+
 fn main() {
 	sum = 1 + 1
 }
