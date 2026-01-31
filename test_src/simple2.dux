@@ -1,13 +1,11 @@
-global = "test"
-
 fn main() {
-	sum = 1 + 1
+	sum := 1 + 1
 }
 
 fn add() {
-    test = 5 * 5
-    test2 = test
-    test3 = 5 * 5 + 5
+    test := 5 * 5
+    test2 := test
+    test3 := 5 * 5 + 5
     
     return 5
 }
