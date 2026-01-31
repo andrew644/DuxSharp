@@ -107,17 +107,20 @@ public class ParserController(List<Token> tokens)
     {
         return token.Type switch
         {
-            TokenType.Number =>
-                new Expr.Literal(token.Text),
+            TokenType.Integer =>
+                new Expr.Literal.Integer(Convert.ToInt64(token.Text)),
+            
+            TokenType.Float =>
+                new Expr.Literal.Float(Convert.ToDouble(token.Text)),
             
             TokenType.String =>
-                new Expr.Literal(token.Text),
+                new Expr.Literal.String(token.Text),
 
             TokenType.Identifier =>
                 new Expr.Variable(token),
 
-            //TokenType.Minus =>
-            //    new Expr.Unary(token, ParseExpression(Precedence.Unary)),
+            TokenType.Minus =>
+                new Expr.Unary(token, ParseExpression(Precedence.Unary)),
 
             TokenType.OpenParen =>
                 ParseGrouping(),

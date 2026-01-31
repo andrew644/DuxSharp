@@ -29,8 +29,10 @@ public static class DuxSharp
         List<Stmt> ast = parser.Parse();
         Console.WriteLine(parser);
         
-        Console.WriteLine("\nCodegen:");
+        Console.WriteLine("\nCodegen...");
         var codegen = new CodeGen(ast);
-        File.WriteAllText(args[1], codegen.Generate());
+        var ir = codegen.Generate();
+        File.WriteAllText(args[1], ir);
+        Console.WriteLine($"Generated:\n{ir}");
     }
 }

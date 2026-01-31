@@ -46,7 +46,10 @@ public class LexerController(string file)
                     AddToken(TokenType.Plus);
                     break;
                 case '-':
-                    LexDoubleChar('>', TokenType.Minus, TokenType.Arrow);
+                    LexDoubleChar(TokenType.Minus, new Dictionary<char, TokenType>
+                    {
+                        {'>', TokenType.Arrow},
+                    });
                     break;
                 case '*':
                     AddToken(TokenType.Star);
@@ -58,7 +61,16 @@ public class LexerController(string file)
                     }
                     break;
                 case '=':
-                    LexDoubleChar('=', TokenType.Equals, TokenType.DoubleEquals);
+                    LexDoubleChar(TokenType.Equals, new Dictionary<char, TokenType>
+                    {
+                        {'=', TokenType.DoubleEquals},
+                    });
+                    break;
+                case ':':
+                    LexDoubleChar(TokenType.Colon, new Dictionary<char, TokenType>
+                    {
+                        {'=', TokenType.Assignment},
+                    });
                     break;
                 case '"':
                     LexString();
@@ -111,17 +123,18 @@ public class LexerController(string file)
         _index++;
     }
 
-    private void LexDoubleChar(char secondChar, TokenType singleCharToken, TokenType twoCharToken)
+    private void LexDoubleChar(TokenType singleCharToken, Dictionary<char, TokenType> secondCharMapping)
     {
-        if (Peek() == secondChar)
+        char next = Peek();
+        bool exists = secondCharMapping.TryGetValue(next, out var twoCharToken);
+        if (exists)
         {
             Advance();
             AddToken(twoCharToken);
+            return;
         }
-        else
-        {
-            AddToken(singleCharToken);
-        }
+        
+        AddToken(singleCharToken);
     }
 
     private void LexString()
@@ -159,15 +172,17 @@ public class LexerController(string file)
 
     private void LexNumber()
     {
+        bool isFloat = false;
         while (IsDigit(Peek())) Advance();
 
         if (Peek() == '.' && IsDigit(Peek(2)))
         {
+            isFloat = true;
             Advance(); // Consume the "."
             while (IsDigit(Peek())) Advance();
         } 
         
-        AddToken(TokenType.Number);
+        AddToken(isFloat ? TokenType.Float : TokenType.Integer);
     }
 
     private void LexIdentifier()

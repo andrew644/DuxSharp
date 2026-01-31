@@ -8,8 +8,12 @@ public static class Printer
     {
         return expr switch
         {
-            Expr.Literal l =>
-                l.Value?.ToString() ?? "nil",
+            Expr.Literal.Integer i =>
+                i.Value.ToString(),
+            Expr.Literal.Float f =>
+                f.Value.ToString(),
+            Expr.Literal.String s =>
+                s.Value,
 
             Expr.Variable v =>
                 v.Name.Text,
@@ -42,6 +46,7 @@ public static class Printer
                 Print(s.Expr),
 
             Stmt.VarDeclaration s =>
+                //TODO fix this weird code
                 s.Name is null
                     ? Parenthesize("var", s.Name.Text)
                     : Parenthesize("var", s.Name.Text, Print(s.Value)),

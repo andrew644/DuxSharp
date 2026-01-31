@@ -55,19 +55,18 @@ public class CodeGen(List<Stmt> ast)
             GenStmt(stmt);
         }
         _ir.Append("}\n");
-        /*
-           define i32 @main() {
-             ret i32 0
-           }
-         */
     }
 
     private void GenReturn(Stmt.ReturnStmt r)
     {
         switch (r.Expr)
         {
-            case Expr.Literal l:
-                _ir.Append($"  ret i32 {l.Value}\n");
+            //TODO maybe save the return type in the ReturnStmt
+            case Expr.Literal.Integer i:
+                _ir.Append($"  ret i32 {i.Value}\n");
+                break;
+            case Expr.Literal.Float f:
+                _ir.Append($"  ret f32 {f.Value}\n");
                 break;
             default:
                 throw new NotImplementedException(r.Expr.GetType().Name);
@@ -79,7 +78,6 @@ public class CodeGen(List<Stmt> ast)
         switch (expr)
         {
             case Expr.Literal l:
-                GenLiteral(l);
                 break;
             default:
                 throw new NotImplementedException(expr.GetType().Name);
@@ -88,10 +86,5 @@ public class CodeGen(List<Stmt> ast)
         _identifier++;
         
         return _identifier;
-    }
-
-    private void GenLiteral(Expr.Literal l)
-    {
-        //TODO
     }
 }
