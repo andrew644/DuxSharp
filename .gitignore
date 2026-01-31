@@ -5,3 +5,4 @@ riderModule.iml
 /_ReSharper.Caches/
 llvm_ir/
 out/
+.idea/
