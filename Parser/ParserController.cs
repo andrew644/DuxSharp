@@ -55,11 +55,16 @@ public class ParserController(List<Token> tokens)
         }
         
         Consume(TokenType.CloseParen, "Expected close paren.");
-        //TODO return type
+
+        Token? returnType = null;
+        if (Match(TokenType.Arrow))
+        {
+            returnType = Consume(TokenType.Identifier, "Expected function return type");
+        }
         Consume(TokenType.OpenBrace, "Expected open brace.");
 
         var body = Block();
-        return new Stmt.Function(name, args, body, null);
+        return new Stmt.Function(name, args, body, returnType);
     }
 
     private Stmt Statement()
@@ -68,7 +73,7 @@ public class ParserController(List<Token> tokens)
         {
             return ReturnStatement();
         }
-        //TODO add if, for, defer, return, block
+        //TODO add if, for, defer, block
         return ExpressionStatement();
     }
 
@@ -167,6 +172,7 @@ public class ParserController(List<Token> tokens)
         }
 
         Consume(TokenType.CloseBrace, "Expected '}' after block.");
+        MatchNewlines();
         return statements;
     }
 

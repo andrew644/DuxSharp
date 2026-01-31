@@ -12,6 +12,7 @@ public enum TokenType
     CloseBrace,
     Equals,
     DoubleEquals,
+    Arrow,
     String,
     Number,
     Identifier,

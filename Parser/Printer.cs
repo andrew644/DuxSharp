@@ -54,6 +54,7 @@ public static class Printer
                     "fn",
                     s.Name.Text,
                     Parenthesize("params", s.Args.Select(p => p.Text)),
+                    Parenthesize("returns", s.ReturnType != null ? s.ReturnType.Text : "void"),
                     Parenthesize("body", s.Body.Select(Print))
                 ),
             

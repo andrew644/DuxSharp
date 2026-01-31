@@ -45,6 +45,9 @@ public class LexerController(string file)
                 case '+':
                     AddToken(TokenType.Plus);
                     break;
+                case '-':
+                    LexDoubleChar('>', TokenType.Minus, TokenType.Arrow);
+                    break;
                 case '*':
                     AddToken(TokenType.Star);
                     break;
