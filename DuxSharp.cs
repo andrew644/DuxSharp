@@ -1,6 +1,7 @@
 using DuxSharp.CodeGeneration;
 using DuxSharp.Lexer;
 using DuxSharp.Parser;
+using DuxSharp.SemanticAnalysis;
 
 namespace DuxSharp;
 
@@ -28,6 +29,10 @@ public static class DuxSharp
         var parser = new ParserController(tokens);
         List<Stmt> ast = parser.Parse();
         Console.WriteLine(parser);
+        
+        Console.WriteLine("\nAnalyzing:");
+        var analyzer = new SemanticAnalyzer(ast);
+        analyzer.Analize();
         
         Console.WriteLine("\nCodegen...");
         var codegen = new CodeGen(ast);

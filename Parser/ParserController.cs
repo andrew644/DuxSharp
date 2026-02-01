@@ -49,7 +49,7 @@ public class ParserController(List<Token> tokens)
         var name = Consume(TokenType.Identifier, "Expected function name.");
         Consume(TokenType.OpenParen, "Expected open paren after function name.");
         
-        var args = new List<Token>();
+        var args = new List<(string name, ExprType? type)>();
         if (!Check(TokenType.CloseParen))
         {
             //TODO args
@@ -57,10 +57,11 @@ public class ParserController(List<Token> tokens)
         
         Consume(TokenType.CloseParen, "Expected close paren.");
 
-        Token? returnType = null;
+        ExprType? returnType = null;
         if (Match(TokenType.Arrow))
         {
-            returnType = Consume(TokenType.Identifier, "Expected function return type");
+            var returnTypeToken = Consume(TokenType.Identifier, "Expected function return type");
+            returnType = ExprType.GetType(returnTypeToken.Text);
         }
         Consume(TokenType.OpenBrace, "Expected open brace.");
 

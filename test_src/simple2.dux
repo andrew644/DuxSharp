@@ -1,8 +1,10 @@
-fn main() {
+fn main() -> i32 {
 	sum := 1 + 1
+	return sum
 }
 
-fn add() {
+fn add() -> i32 {
+        
     test := 5 * 5
     test2 := test
     test3 := 5 * 5 + 5

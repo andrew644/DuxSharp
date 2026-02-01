@@ -1,3 +1,4 @@
 # TODO
 
-- Parse literals for integers, floats, strings ... Figure-out how to store their values.
+- Store type information in the AST
+- Look into Hindley-Milner type inference

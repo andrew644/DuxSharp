@@ -46,10 +46,7 @@ public static class Printer
                 Print(s.Expr),
 
             Stmt.VarDeclaration s =>
-                //TODO fix this weird code
-                s.Name is null
-                    ? Parenthesize("var", s.Name.Text)
-                    : Parenthesize("var", s.Name.Text, Print(s.Value)),
+                Parenthesize("var", s.Name.Text, Print(s.Value)),
 
             Stmt.Block s =>
                 Parenthesize("block", s.Statements.Select(Print)),
@@ -58,8 +55,8 @@ public static class Printer
                 Parenthesize(
                     "fn",
                     s.Name.Text,
-                    Parenthesize("params", s.Args.Select(p => p.Text)),
-                    Parenthesize("returns", s.ReturnType != null ? s.ReturnType.Text : "void"),
+                    Parenthesize("params", s.Args.Select(p => $"{p.name}: {p.type}")),
+                    Parenthesize("returns", s.ReturnType is not null ? s.ReturnType.LLVMName : "void"),
                     Parenthesize("body", s.Body.Select(Print))
                 ),
             

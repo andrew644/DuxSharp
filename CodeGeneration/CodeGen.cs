@@ -22,11 +22,14 @@ public class CodeGen(List<Stmt> ast)
     {
         switch (stmt)
         {
-            case Stmt.Function f:
-                GenFunction(f);
+            case Stmt.Function s:
+                GenFunction(s);
                 break;
-            case Stmt.ReturnStmt r:
-                GenReturn(r);
+            case Stmt.ReturnStmt s:
+                GenReturn(s);
+                break;
+            case Stmt.VarDeclaration s:
+                GenVarDeclaration(s);
                 break;
             default:
                 throw new NotImplementedException(stmt.GetType().Name);
@@ -38,14 +41,7 @@ public class CodeGen(List<Stmt> ast)
         _identifier = 0;
         
         _ir.Append("define ");
-        if (function.ReturnType != null)
-        {
-            _ir.Append(function.ReturnType.Text);
-        }
-        else
-        {
-            _ir.Append("void");
-        }
+        _ir.Append(function.ReturnType is not null ? function.ReturnType.LLVMName : "void");
 
         _ir.Append($" @{function.Name.Text}(");
         //TODO args
@@ -68,9 +64,22 @@ public class CodeGen(List<Stmt> ast)
             case Expr.Literal.Float f:
                 _ir.Append($"  ret f32 {f.Value}\n");
                 break;
+            case Expr.Variable v:
+                _ir.Append($"  ret f32 {v.Name.Text}\n");//TODO
+                break;
             default:
                 throw new NotImplementedException(r.Expr.GetType().Name);
         }
+    }
+
+    private void GenVarDeclaration(Stmt.VarDeclaration varDeclaration)
+    {
+        
+    }
+
+    private void GenVariable(Expr.Variable v)
+    {
+        
     }
 
     private int GenExpr(Expr expr)
