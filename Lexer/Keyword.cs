@@ -10,6 +10,7 @@ public static class Keyword
         {
             ["and"]    = TokenType.And,
             ["or"]     = TokenType.Or,
+            ["mod"]     = TokenType.Mod,
             ["if"]     = TokenType.If,
             ["else"]   = TokenType.Else,
             ["true"]   = TokenType.True,
@@ -18,6 +19,13 @@ public static class Keyword
             ["fn"]    = TokenType.Fn,
             ["return"] = TokenType.Return,
             ["defer"] = TokenType.Defer,
+            ["enum"] = TokenType.Enum,
+            ["struct"] = TokenType.Struct,
+            ["union"] = TokenType.Union,
+            ["break"] = TokenType.Break,
+            ["continue"] = TokenType.Continue,
+            ["goto"] = TokenType.Goto,
+            ["import"] = TokenType.Import,
         };
     }
 }

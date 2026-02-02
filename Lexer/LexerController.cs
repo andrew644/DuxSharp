@@ -42,17 +42,30 @@ public class LexerController(string file)
                 case '}':
                     AddToken(TokenType.CloseBrace);
                     break;
+                case '[':
+                    AddToken(TokenType.OpenBracket);
+                    break;
+                case ']':
+                    AddToken(TokenType.CloseBracket);
+                    break;
                 case '+':
-                    AddToken(TokenType.Plus);
+                    LexDoubleChar(TokenType.Plus, new Dictionary<char, TokenType>
+                    {
+                        {'=', TokenType.PlusEquals},
+                    });
                     break;
                 case '-':
                     LexDoubleChar(TokenType.Minus, new Dictionary<char, TokenType>
                     {
                         {'>', TokenType.Arrow},
+                        {'=', TokenType.MinusEquals},
                     });
                     break;
                 case '*':
-                    AddToken(TokenType.Star);
+                    LexDoubleChar(TokenType.Star, new Dictionary<char, TokenType>
+                    {
+                        {'=', TokenType.StarEquals},
+                    });
                     break;
                 case '/':
                     if (Peek() == '/') // Single line comments
@@ -60,7 +73,10 @@ public class LexerController(string file)
                         while (Peek() != '\n' && Peek() != '\0') Advance();
                         break;
                     }
-                    AddToken(TokenType.Slash);
+                    LexDoubleChar(TokenType.Slash, new Dictionary<char, TokenType>
+                    {
+                        {'=', TokenType.SlashEquals},
+                    });
                     break;
                 case '=':
                     LexDoubleChar(TokenType.Equals, new Dictionary<char, TokenType>
@@ -68,11 +84,35 @@ public class LexerController(string file)
                         {'=', TokenType.DoubleEquals},
                     });
                     break;
+                case '<':
+                    LexDoubleChar(TokenType.Less, new Dictionary<char, TokenType>
+                    {
+                        {'=', TokenType.LessEquals},
+                    });
+                    break;
+                case '>':
+                    LexDoubleChar(TokenType.Greater, new Dictionary<char, TokenType>
+                    {
+                        {'=', TokenType.GreaterEquals},
+                    });
+                    break;
+                case '!':
+                    LexDoubleChar(TokenType.Exclamation, new Dictionary<char, TokenType>
+                    {
+                        {'=', TokenType.ExclamationEquals},
+                    });
+                    break;
                 case ':':
                     LexDoubleChar(TokenType.Colon, new Dictionary<char, TokenType>
                     {
-                        {'=', TokenType.Assignment},
+                        {'=', TokenType.ColonEquals},
                     });
+                    break;
+                case '.':
+                    AddToken(TokenType.Dot);
+                    break;
+                case ',':
+                    AddToken(TokenType.Comma);
                     break;
                 case '"':
                     LexString();
@@ -154,7 +194,7 @@ public class LexerController(string file)
         }
         
         Advance(); //closing "
-        AddToken(TokenType.String);
+        AddToken(TokenType.StringLiteral);
     }
 
     private bool IsDigit(char c)
@@ -184,7 +224,7 @@ public class LexerController(string file)
             while (IsDigit(Peek())) Advance();
         } 
         
-        AddToken(isFloat ? TokenType.Float : TokenType.Integer);
+        AddToken(isFloat ? TokenType.FloatLiteral : TokenType.IntegerLiteral);
     }
 
     private void LexIdentifier()

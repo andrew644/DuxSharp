@@ -2,33 +2,73 @@ namespace DuxSharp.Lexer;
 
 public enum TokenType
 {
+    // Math
     Plus,
     Minus,
     Star,
     Slash,
+    Equals,
+    DoubleEquals,
+    GreaterEquals,
+    LessEquals,
+    Less,
+    Greater,
+    ExclamationEquals,
+    Mod,
+    PlusEquals,
+    MinusEquals,
+    StarEquals,
+    SlashEquals,
+    
+    // Groups
     OpenParen,
     CloseParen,
     OpenBrace,
     CloseBrace,
-    Equals,
-    DoubleEquals,
+    OpenBracket,
+    CloseBracket,
+    
+    // Delimiters
     Colon,
-    Assignment,
+    Dot,
     Arrow,
     Comma,
-    String,
-    Float,
-    Integer,
+    Newline,
+    
+    // Literals
+    StringLiteral,
+    FloatLiteral,
+    IntegerLiteral,
+    
+    // Variable
     Identifier,
+    ColonEquals,
+    
+    // Logic
     And,
     Or,
+    True,
+    False,
+    Exclamation,
+    
+    // Control
     If,
     Else,
     For,
+    Break,
+    Continue,
+    Goto,
+    
+    // Function
     Fn,
     Return,
-    True,
-    False,
     Defer,
-    Newline,
+    
+    // Special Types
+    Enum,
+    Struct,
+    Union,
+    
+    // Package
+    Import,
 }

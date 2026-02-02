@@ -26,7 +26,7 @@ public class ParserController(List<Token> tokens)
             return FunctionDeclaration();
         }
         
-        if (CheckAhead(TokenType.Identifier, TokenType.Assignment) 
+        if (CheckAhead(TokenType.Identifier, TokenType.ColonEquals) 
             || CheckAhead(TokenType.Identifier, TokenType.Colon))
         {
             return VarDeclaration();
@@ -38,7 +38,7 @@ public class ParserController(List<Token> tokens)
     private Stmt VarDeclaration()
     {
         var name = Consume(TokenType.Identifier, "Expected var name");
-        Consume(TokenType.Assignment, "Expected ':=' after variable name.");
+        Consume(TokenType.ColonEquals, "Expected ':=' after variable name.");
         var expr = Expression();
         Consume(TokenType.Newline, "Expected newline at end of statement.");
         return new Stmt.VarDeclaration(name, expr);
@@ -109,13 +109,13 @@ public class ParserController(List<Token> tokens)
     {
         return token.Type switch
         {
-            TokenType.Integer =>
+            TokenType.IntegerLiteral =>
                 new Expr.Literal.Integer(Convert.ToInt64(token.Text)),
             
-            TokenType.Float =>
+            TokenType.FloatLiteral =>
                 new Expr.Literal.Float(Convert.ToDouble(token.Text)),
             
-            TokenType.String =>
+            TokenType.StringLiteral =>
                 new Expr.Literal.String(token.Text),
 
             TokenType.Identifier =>
