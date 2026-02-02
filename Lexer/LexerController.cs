@@ -73,6 +73,16 @@ public class LexerController(string file)
                         while (Peek() != '\n' && Peek() != '\0') Advance();
                         break;
                     }
+
+                    if (Peek() == '*') // Multiline comment
+                    {
+                        Advance();
+                        while ((Peek() != '*' || Peek(2) != '/') && Peek() != '\0' && Peek(2) != '\0') Advance();
+                        Advance();
+                        Advance();
+                        break;
+                    }
+                    
                     LexDoubleChar(TokenType.Slash, new Dictionary<char, TokenType>
                     {
                         {'=', TokenType.SlashEquals},
@@ -107,6 +117,9 @@ public class LexerController(string file)
                     {
                         {'=', TokenType.ColonEquals},
                     });
+                    break;
+                case '|':
+                    AddToken(TokenType.Bar);
                     break;
                 case '.':
                     AddToken(TokenType.Dot);

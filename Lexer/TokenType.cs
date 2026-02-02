@@ -33,6 +33,7 @@ public enum TokenType
     Dot,
     Arrow,
     Comma,
+    Bar,
     Newline,
     
     // Literals
