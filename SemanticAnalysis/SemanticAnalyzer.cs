@@ -4,6 +4,8 @@ namespace DuxSharp.SemanticAnalysis;
 
 public class SemanticAnalyzer(List<Stmt> stmts) 
 {
+    private VarScope _functionScope = new VarScope();
+    
     public void Analize()
     {
         foreach (var stmt in stmts)
@@ -51,6 +53,7 @@ public class SemanticAnalyzer(List<Stmt> stmts)
 
     private void AnFunction(Stmt.Function f)
     {
+        _functionScope = new VarScope();
         foreach (var arg in f.Args)
         {
             //TODO
@@ -64,7 +67,8 @@ public class SemanticAnalyzer(List<Stmt> stmts)
 
     private void AnVarDeclaration(Stmt.VarDeclaration v)
     {
-        AnExpr(v.Value);
+        v.Value.Type = AnExpr(v.Value);
+        _functionScope.AddVar(v.Name.Text, v.Value.Type);
     }
 
     private void AnReturnStmt(Stmt.ReturnStmt r)
@@ -97,44 +101,49 @@ public class SemanticAnalyzer(List<Stmt> stmts)
         }        
     }
 
-    private ExprType AnBinary(Expr.Binary b)
+    private ExprType AnBinary(Expr.Binary e)
     {
-        AnExpr(b.Left);
-        return AnExpr(b.Right);
+        AnExpr(e.Left);
+        return e.Type = AnExpr(e.Right);
     }
 
-    private ExprType AnUnary(Expr.Unary u)
+    private ExprType AnUnary(Expr.Unary e)
     {
-        return AnExpr(u.Right);
+        return e.Type = AnExpr(e.Right);
     }
 
     private ExprType AnInteger(Expr.Literal.Integer i)
     {
+        i.LiteralValue = i.Value.ToString();
         return ExprType.Ti32;
     }
     
     private ExprType AnFloat(Expr.Literal.Float f)
     {
+        f.LiteralValue = f.Value.ToString();
         return ExprType.Tf32;
     }
 
     private ExprType AnString(Expr.Literal.String s)
     {
+        s.LiteralValue = s.Value;
         return ExprType.Tstring;
     }
 
-    private ExprType AnGrouping(Expr.Grouping g)
+    private ExprType AnGrouping(Expr.Grouping e)
     {
-        return AnExpr(g.Expression);
+        return e.Type = AnExpr(e.Expression);
     }
 
-    private ExprType AnVariable(Expr.Variable v)
+    private ExprType AnVariable(Expr.Variable e)
     {
-        return ExprType.Ti32; //TODO we need to get this from the declaration
+        ExprType? type = _functionScope.GetVar(e.Name.Text);
+        if (type is null) throw new Exception($"Variable '{e.Name.Text}' not found");
+        return e.Type = type;
     }
 
-    private ExprType AnAssign(Expr.Assign a)
+    private ExprType AnAssign(Expr.Assign e)
     {
-        return AnExpr(a);
+        return e.Type = AnExpr(e.Value);
     }
 }

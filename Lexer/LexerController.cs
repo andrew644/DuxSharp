@@ -58,7 +58,9 @@ public class LexerController(string file)
                     if (Peek() == '/') // Single line comments
                     {
                         while (Peek() != '\n' && Peek() != '\0') Advance();
+                        break;
                     }
+                    AddToken(TokenType.Slash);
                     break;
                 case '=':
                     LexDoubleChar(TokenType.Equals, new Dictionary<char, TokenType>

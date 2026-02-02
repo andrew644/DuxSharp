@@ -1,13 +1,16 @@
 fn main() -> i32 {
-	sum := 1 + 1
-	return sum
+	sum := 7
+	dog := 1
+	cat := 5 / 2
+	sun := 5 * 5
+	return dog + sum + 5 / cat + sun
 }
 
 fn add() -> i32 {
         
-    test := 5 * 5
-    test2 := test
-    test3 := 5 * 5 + 5
+    //test := 5 * 5
+    //test2 := test
+    //test3 := 5 * 5 + 5
     
     return 5
 }
