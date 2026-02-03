@@ -17,7 +17,5 @@ fn add() -> i32 {
 }
 
 fn test() -> i64 {
-    for i := 0 | i < size | i += 1 {
-    }
     return 1
 }

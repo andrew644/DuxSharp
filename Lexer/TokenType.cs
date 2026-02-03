@@ -23,10 +23,10 @@ public enum TokenType
     // Groups
     OpenParen,
     CloseParen,
-    OpenBrace,
-    CloseBrace,
-    OpenBracket,
-    CloseBracket,
+    OpenCurly,
+    CloseCurly,
+    OpenSquare,
+    CloseSquare,
     
     // Delimiters
     Colon,

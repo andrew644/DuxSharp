@@ -37,16 +37,16 @@ public class LexerController(string file)
                     AddToken(TokenType.CloseParen);
                     break;
                 case '{':
-                    AddToken(TokenType.OpenBrace);
+                    AddToken(TokenType.OpenCurly);
                     break;
                 case '}':
-                    AddToken(TokenType.CloseBrace);
+                    AddToken(TokenType.CloseCurly);
                     break;
                 case '[':
-                    AddToken(TokenType.OpenBracket);
+                    AddToken(TokenType.OpenSquare);
                     break;
                 case ']':
-                    AddToken(TokenType.CloseBracket);
+                    AddToken(TokenType.CloseSquare);
                     break;
                 case '+':
                     LexDoubleChar(TokenType.Plus, new Dictionary<char, TokenType>

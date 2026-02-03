@@ -60,6 +60,14 @@ public static class Printer
                     Parenthesize("body", s.Body.Select(Print))
                 ),
             
+            Stmt.IfStmt s =>
+                Parenthesize(
+                    "if",
+                    Parenthesize("condition", s.Condition),
+                    Parenthesize("body",Print(s.Body)),
+                    Parenthesize("else", s.Else is not null ? s.Else : "No Else")
+                ),
+            
             Stmt.ReturnStmt s =>
                 Parenthesize("return", s.Expr),
 

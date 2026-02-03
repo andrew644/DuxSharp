@@ -34,8 +34,14 @@ public class CodeGen(List<Stmt> ast)
             case Stmt.VarDeclaration s:
                 GenVarDeclaration(s);
                 break;
+            case Stmt.Block s:
+                GenBlock(s);
+                break;
             case Stmt.Expression s:
                 GenExpressionStmt(s);
+                break;
+            case Stmt.IfStmt s:
+                GenIfStmt(s);
                 break;
             default:
                 throw new NotImplementedException(stmt.GetType().Name);
@@ -60,6 +66,14 @@ public class CodeGen(List<Stmt> ast)
         _ir.AppendLine("}");
     }
 
+    private void GenBlock(Stmt.Block block)
+    {
+        foreach(var stmt in block.Statements)
+        {
+            GenStmt(stmt);
+        }
+    }
+
     private void GenReturn(Stmt.ReturnStmt r)
     {
         switch (r.Expr)
@@ -70,17 +84,6 @@ public class CodeGen(List<Stmt> ast)
             case Expr.Literal.Float f:
                 _ir.AppendLine($"  ret f32 {f.Value}");
                 break;
-            /*
-            case Expr.Variable v:
-                ExprType? type = _functionScope.GetVar(v.Name.Text);
-                if (type is null)
-                {
-                    throw new Exception($"Variable {v.Name.Text} not found");
-                }
-                _ir.AppendLine($"  %{_identifier} = load {type.LLVMName}, ptr %{v.Name.Text}");
-                _ir.AppendLine($"  ret {type.LLVMName} %{_identifier}");
-                break;
-                */
             default:
                 int id = GenExpr(r.Expr);
                 _ir.AppendLine($"  ret {r.Expr.Type.LLVMName} %{id}");
@@ -100,6 +103,34 @@ public class CodeGen(List<Stmt> ast)
         
         int id = GenExpr(vd.Value);
         _ir.AppendLine($"  store {vd.Value.Type.LLVMName} %{id}, ptr %{vd.Name.Text}");
+    }
+
+    private void GenIfStmt(Stmt.IfStmt ifStmt)
+    {
+        int conditionId = GenExpr(ifStmt.Condition);
+        string jumpBody = $"if_body{_identifier++}";
+        string jumpEnd = $"if_end{_identifier++}";
+        if (ifStmt.Else is not null)
+        {
+            string jumpElse = $"else_body{_identifier++}";
+            _ir.AppendLine($"  br i1 %{conditionId}, label %{jumpBody}, label %{jumpElse}");
+            _ir.AppendLine($"{jumpBody}:");
+            GenStmt(ifStmt.Body);
+            _ir.AppendLine($"  br label %{jumpEnd}");
+            _ir.AppendLine($"{jumpElse}:");
+            GenStmt(ifStmt.Else);
+            _ir.AppendLine($"  br label %{jumpEnd}");
+            _ir.AppendLine($"{jumpEnd}:");
+        }
+        else
+        {
+            _ir.AppendLine($"  br i1 %{conditionId}, label %{jumpBody}, label %{jumpEnd}");
+            _ir.AppendLine($"{jumpBody}:");
+            GenStmt(ifStmt.Body);
+            _ir.AppendLine($"  br label %{jumpEnd}");
+            _ir.AppendLine($"{jumpEnd}:");
+        }
+        
     }
     
     private void GenExpressionStmt(Stmt.Expression e)
@@ -165,6 +196,18 @@ public class CodeGen(List<Stmt> ast)
                 break;
             case TokenType.Slash:
                 _ir.AppendLine($"  %{_identifier} = sdiv {e.Type.LLVMName} {leftValue}, {rightValue}");
+                break;
+            case TokenType.Greater:
+                _ir.AppendLine($"  %{_identifier} = icmp sgt {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                break;
+            case TokenType.GreaterEquals:
+                _ir.AppendLine($"  %{_identifier} = icmp sge {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                break;
+            case TokenType.Less:
+                _ir.AppendLine($"  %{_identifier} = icmp slt {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                break;
+            case TokenType.LessEquals:
+                _ir.AppendLine($"  %{_identifier} = icmp sle {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
                 break;
             default:
                 throw new NotImplementedException();

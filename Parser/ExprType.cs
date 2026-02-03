@@ -32,4 +32,9 @@ public class ExprType
     }
 
     public string LLVMName { get; private set; }
+
+    public override string ToString()
+    {
+        return LLVMName;
+    }
 }

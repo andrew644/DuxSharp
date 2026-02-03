@@ -18,20 +18,23 @@ public class SemanticAnalyzer(List<Stmt> stmts)
     {
         switch (stmt)
         {
-            case Stmt.Expression e:
-                AnExpression(e);
+            case Stmt.Expression s:
+                AnExpression(s);
                 break;
-            case Stmt.Block b:
-                AnBlock(b);
+            case Stmt.Block s:
+                AnBlock(s);
                 break;
-            case Stmt.Function f:
-                AnFunction(f);
+            case Stmt.Function s:
+                AnFunction(s);
                 break;
-            case Stmt.VarDeclaration v:
-                AnVarDeclaration(v);
+            case Stmt.VarDeclaration s:
+                AnVarDeclaration(s);
                 break;
-            case Stmt.ReturnStmt r:
-                AnReturnStmt(r);
+            case Stmt.ReturnStmt s:
+                AnReturnStmt(s);
+                break;
+            case Stmt.IfStmt s:
+                AnIfStmt(s);
                 break;
             default:
                 throw new NotImplementedException();
@@ -74,6 +77,13 @@ public class SemanticAnalyzer(List<Stmt> stmts)
     private void AnReturnStmt(Stmt.ReturnStmt r)
     {
         AnExpr(r.Expr);
+    }
+
+    private void AnIfStmt(Stmt.IfStmt s)
+    {
+        AnExpr(s.Condition);
+        AnStmt(s.Body);
+        if (s.Else is not null) AnStmt(s.Else);
     }
 
     private ExprType AnExpr(Expr e)

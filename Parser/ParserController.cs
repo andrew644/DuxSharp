@@ -63,7 +63,7 @@ public class ParserController(List<Token> tokens)
             var returnTypeToken = Consume(TokenType.Identifier, "Expected function return type");
             returnType = ExprType.GetType(returnTypeToken.Text);
         }
-        Consume(TokenType.OpenBrace, "Expected open brace.");
+        Consume(TokenType.OpenCurly, "Expected open brace.");
 
         var body = Block();
         return new Stmt.Function(name, args, body, returnType);
@@ -75,7 +75,15 @@ public class ParserController(List<Token> tokens)
         {
             return ReturnStatement();
         }
-        //TODO add if, for, defer, block
+        if (Match(TokenType.If))
+        {
+            return IfStatement();
+        }
+        if (Match(TokenType.OpenSquare))
+        {
+            return new Stmt.Block(Block());
+        }
+        //TODO add for, defer
         return ExpressionStatement();
     }
 
@@ -84,6 +92,21 @@ public class ParserController(List<Token> tokens)
         var expr = Expression();
         Consume(TokenType.Newline, "Expected newline at end of statement.");
         return new Stmt.ReturnStmt(expr);
+    }
+
+    private Stmt IfStatement()
+    {
+        Expr e = Expression();
+        Match(TokenType.OpenCurly);
+        Stmt body = new Stmt.Block(Block());
+        Stmt? elseStmt = null;
+        if (Match(TokenType.Else))
+        {
+            Match(TokenType.OpenCurly);
+            elseStmt = new Stmt.Block(Block());
+        }
+
+        return new Stmt.IfStmt(e, body, elseStmt);
     }
 
     private Expr Expression()
@@ -123,6 +146,9 @@ public class ParserController(List<Token> tokens)
 
             TokenType.Minus =>
                 new Expr.Unary(token, ParseExpression(Precedence.Unary)),
+            
+            TokenType.Exclamation =>
+                new Expr.Unary(token, ParseExpression(Precedence.Unary)),
 
             TokenType.OpenParen =>
                 ParseGrouping(),
@@ -155,6 +181,12 @@ public class ParserController(List<Token> tokens)
                 left is Expr.Variable v
                     ? new Expr.Assign(v.Name, right)
                     : throw Error(op, "Invalid assignment target."),
+            
+            TokenType.Greater or 
+            TokenType.GreaterEquals or  
+            TokenType.Less or
+            TokenType.LessEquals =>
+                new Expr.Binary(left, op, right),
 
             _ => throw Error(op, "Unknown operator.")
         };
@@ -170,13 +202,13 @@ public class ParserController(List<Token> tokens)
     private List<Stmt> Block()
     {
         List<Stmt> statements = [];
-        while (!Check(TokenType.CloseBrace) && !IsAtEnd())
+        while (!Check(TokenType.CloseCurly) && !IsAtEnd())
         {
             MatchNewlines();
             statements.Add(Declaration());
         }
 
-        Consume(TokenType.CloseBrace, "Expected '}' after block.");
+        Consume(TokenType.CloseCurly, "Expected '}' after block.");
         MatchNewlines();
         return statements;
     }
