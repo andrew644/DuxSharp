@@ -36,6 +36,9 @@ public class SemanticAnalyzer(List<Stmt> stmts)
             case Stmt.IfStmt s:
                 AnIfStmt(s);
                 break;
+            case Stmt.ForStmt s:
+                AnForStmt(s);
+                break;
             default:
                 throw new NotImplementedException();
         }
@@ -84,6 +87,14 @@ public class SemanticAnalyzer(List<Stmt> stmts)
         AnExpr(s.Condition);
         AnStmt(s.Body);
         if (s.Else is not null) AnStmt(s.Else);
+    }
+
+    private void AnForStmt(Stmt.ForStmt s)
+    {
+        if (s.Start is not null) AnStmt(s.Start);
+        if (s.Condition is not null) AnExpr(s.Condition);
+        if (s.Iteration is not null) AnExpr(s.Iteration);
+        AnStmt(s.Body);
     }
 
     private ExprType AnExpr(Expr e)

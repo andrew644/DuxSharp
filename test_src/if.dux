@@ -1,0 +1,10 @@
+fn main() -> i32 {
+	test := 5
+	if test >= 1 {
+		return 1
+	} else {
+	    return 49
+	}
+
+	return 0
+}

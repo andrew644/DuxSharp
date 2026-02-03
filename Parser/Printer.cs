@@ -68,6 +68,15 @@ public static class Printer
                     Parenthesize("else", s.Else is not null ? s.Else : "No Else")
                 ),
             
+            Stmt.ForStmt s =>
+                Parenthesize(
+                    "for",
+                    Parenthesize("start", s.Start is not null ? s.Start : "void"),
+                    Parenthesize("condition", s.Condition is not null ? s.Condition : "void"),
+                    Parenthesize("iteration", s.Iteration is not null ? s.Iteration : "void"),
+                    Parenthesize("body", Print(s.Body))
+                ),
+            
             Stmt.ReturnStmt s =>
                 Parenthesize("return", s.Expr),
 

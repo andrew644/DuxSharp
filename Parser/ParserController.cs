@@ -27,7 +27,7 @@ public class ParserController(List<Token> tokens)
         }
         
         if (CheckAhead(TokenType.Identifier, TokenType.ColonEquals) 
-            || CheckAhead(TokenType.Identifier, TokenType.Colon))
+            || CheckAhead(TokenType.Identifier, TokenType.Colon)) //TODO support this?
         {
             return VarDeclaration();
         }
@@ -83,7 +83,11 @@ public class ParserController(List<Token> tokens)
         {
             return new Stmt.Block(Block());
         }
-        //TODO add for, defer
+        if (Match(TokenType.For))
+        {
+            return ForStatement();
+        }
+        //TODO add defer
         return ExpressionStatement();
     }
 
@@ -107,6 +111,55 @@ public class ParserController(List<Token> tokens)
         }
 
         return new Stmt.IfStmt(e, body, elseStmt);
+    }
+
+    private Stmt ForStatement()
+    {
+        if (Match(TokenType.OpenCurly)) // infinite loop   for { true }
+        {
+            return new Stmt.ForStmt(null, null, null, new Stmt.Block(Block()));
+        }
+
+        Stmt? start = null;
+        List<Expr> expressions = [];
+        if (CheckAhead(TokenType.Identifier, TokenType.ColonEquals))
+        {
+            var name = Consume(TokenType.Identifier, "Expected var name");
+            Consume(TokenType.ColonEquals, "Expected ':=' after variable name.");
+            var expr = Expression();
+            start = new Stmt.VarDeclaration(name, expr);
+        }
+        else
+        {
+            expressions.Add(Expression());
+            if (Match(TokenType.OpenCurly)) // for { condition }
+            {
+                return new Stmt.ForStmt(
+                    null, 
+                    expressions.First(), 
+                    null, 
+                    new Stmt.Block(Block()));
+            }
+        }
+        
+        // for { start|expr, expr, expr }
+        Consume(TokenType.Comma, "Expected comma");
+        expressions.Add(Expression());
+        Consume(TokenType.Comma, "Expected second comma");
+        expressions.Add(Expression());
+        
+        Consume(TokenType.OpenCurly, "Expected open curly brace");
+        Stmt body = new Stmt.Block(Block());
+
+        if (start is not null)
+        {
+            return new Stmt.ForStmt(start, expressions[0], expressions[1], body);
+        }
+        return new Stmt.ForStmt(
+            new Stmt.Expression(expressions[0]),
+            expressions[1],
+            expressions[2],
+            body);
     }
 
     private Expr Expression()
@@ -174,20 +227,24 @@ public class ParserController(List<Token> tokens)
             TokenType.Plus or
             TokenType.Minus or
             TokenType.Star or
-            TokenType.Slash =>
+            TokenType.Slash or
+            TokenType.Greater or 
+            TokenType.GreaterEquals or  
+            TokenType.Less or
+            TokenType.LessEquals or 
+            TokenType.DoubleEquals or 
+            TokenType.ExclamationEquals =>
                 new Expr.Binary(left, op, right),
 
-            TokenType.Equals =>
+            TokenType.Equals or 
+            TokenType.PlusEquals or 
+            TokenType.MinusEquals or 
+            TokenType.StarEquals or 
+            TokenType.SlashEquals =>
                 left is Expr.Variable v
                     ? new Expr.Assign(v.Name, right)
                     : throw Error(op, "Invalid assignment target."),
             
-            TokenType.Greater or 
-            TokenType.GreaterEquals or  
-            TokenType.Less or
-            TokenType.LessEquals =>
-                new Expr.Binary(left, op, right),
-
             _ => throw Error(op, "Unknown operator.")
         };
     }
@@ -201,6 +258,7 @@ public class ParserController(List<Token> tokens)
 
     private List<Stmt> Block()
     {
+        MatchNewlines();
         List<Stmt> statements = [];
         while (!Check(TokenType.CloseCurly) && !IsAtEnd())
         {
@@ -208,6 +266,7 @@ public class ParserController(List<Token> tokens)
             statements.Add(Declaration());
         }
 
+        MatchNewlines();
         Consume(TokenType.CloseCurly, "Expected '}' after block.");
         MatchNewlines();
         return statements;

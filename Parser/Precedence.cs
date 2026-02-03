@@ -4,7 +4,7 @@ namespace DuxSharp.Parser;
 
 public static class Precedence
 {
-    public const int None = 0;
+    public const int None = 0; //TODO use enum
     public const int Assignment = None + 1; // = += -= *= /=
     public const int LogicalOr = Assignment + 1;
     public const int LogicalAnd = LogicalOr + 1;

@@ -11,4 +11,5 @@ public abstract record Stmt
     public record VarDeclaration(Token Name, Expr Value) : Stmt;
     public record ReturnStmt(Expr Expr) : Stmt;
     public record IfStmt(Expr Condition, Stmt Body, Stmt? Else) : Stmt;
+    public record ForStmt(Stmt? Start, Expr? Condition, Expr? Iteration, Stmt Body) : Stmt;
 }

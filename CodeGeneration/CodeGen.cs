@@ -43,6 +43,9 @@ public class CodeGen(List<Stmt> ast)
             case Stmt.IfStmt s:
                 GenIfStmt(s);
                 break;
+            case Stmt.ForStmt s:
+                GenForStmt(s);
+                break;
             default:
                 throw new NotImplementedException(stmt.GetType().Name);
         }
@@ -130,7 +133,32 @@ public class CodeGen(List<Stmt> ast)
             _ir.AppendLine($"  br label %{jumpEnd}");
             _ir.AppendLine($"{jumpEnd}:");
         }
+    }
+
+    private void GenForStmt(Stmt.ForStmt forStmt)
+    {
+        string forBody = $"for_body{_identifier++}";
+        if (forStmt.Condition is null)
+        {
+            _ir.AppendLine($"  br label %{forBody}");
+            _ir.AppendLine($"{forBody}:");
+            GenStmt(forStmt.Body);
+            _ir.AppendLine($"  br label %{forBody}");
+            return;
+        }
         
+        if (forStmt.Start is not null) GenStmt(forStmt.Start);
+        string forCondition = $"for_condition{_identifier++}";
+        string forEnd = $"for_end{_identifier++}";
+        _ir.AppendLine($"  br label %{forCondition}");
+        _ir.AppendLine($"{forCondition}:");
+        int conditionId = GenExpr(forStmt.Condition);
+        _ir.AppendLine($"  br i1 %{conditionId}, label %{forBody}, label %{forEnd}");
+        _ir.AppendLine($"{forBody}:");
+        GenStmt(forStmt.Body);
+        _ir.AppendLine($"  br label %{forCondition}");
+        _ir.AppendLine($"{forEnd}:");
+        //TODO gen iteration
     }
     
     private void GenExpressionStmt(Stmt.Expression e)
