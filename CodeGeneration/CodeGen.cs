@@ -263,44 +263,46 @@ public class CodeGen(List<Stmt> ast)
     {
         string leftValue = e.Left.LiteralValue ?? $"%{GenExpr(e.Left)}";
         string rightValue = e.Right.LiteralValue ?? $"%{GenExpr(e.Right)}";
+        string operation;
         switch (e.Operator.Type)
         {
             case TokenType.Plus:
-                _ir.AppendLine($"  %{_identifier} = add nsw {e.Type.LLVMName} {leftValue}, {rightValue}");
+                operation = "add nsw";
                 break;
             case TokenType.Minus:
-                _ir.AppendLine($"  %{_identifier} = sub nsw {e.Type.LLVMName} {leftValue}, {rightValue}");
+                operation = "sub nsw";
                 break;
             case TokenType.Star:
-                _ir.AppendLine($"  %{_identifier} = mul nsw {e.Type.LLVMName} {leftValue}, {rightValue}");
+                operation = "mul nsw";
                 break;
             case TokenType.Slash:
-                _ir.AppendLine($"  %{_identifier} = sdiv {e.Type.LLVMName} {leftValue}, {rightValue}");
+                operation = "sdiv";
                 break;
             case TokenType.DoubleEquals:
-                _ir.AppendLine($"  %{_identifier} = icmp eq {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                operation = "icmp eq";
                 break;
             case TokenType.ExclamationEquals:
-                _ir.AppendLine($"  %{_identifier} = icmp ne {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                operation = "icmp ne";
                 break;
             case TokenType.Greater:
-                _ir.AppendLine($"  %{_identifier} = icmp sgt {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                operation = "icmp sgt";
                 break;
             case TokenType.GreaterEquals:
-                _ir.AppendLine($"  %{_identifier} = icmp sge {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                operation = "icmp sge";
                 break;
             case TokenType.Less:
-                _ir.AppendLine($"  %{_identifier} = icmp slt {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                operation = "icmp slt";
                 break;
             case TokenType.LessEquals:
-                _ir.AppendLine($"  %{_identifier} = icmp sle {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                operation = "icmp sle";
                 break;
             case TokenType.Percent:
-                _ir.AppendLine($"  %{_identifier} = srem {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                operation = "srem";
                 break;
             default:
                 throw new NotImplementedException();
         }
+        _ir.AppendLine($"  %{_identifier} = {operation} {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
 
         return _identifier++;
     }
