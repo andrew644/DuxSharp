@@ -8,6 +8,7 @@ namespace DuxSharp.CodeGeneration;
 public class CodeGen(List<Stmt> ast)
 {
     private readonly StringBuilder _ir = new StringBuilder();
+    private readonly Dictionary<string, int> _stringLiterals = new Dictionary<string, int>();
     private int _identifier = 1;
     private VarScope _functionScope = new VarScope();
 
@@ -17,8 +18,21 @@ public class CodeGen(List<Stmt> ast)
         {
             GenStmt(stmt);
         }
+        
+        StringBuilder stringLiterals = new StringBuilder();
 
-        return _ir.ToString();
+        //TODO move this to a class
+        foreach (var (stringLiteral, stringId) in _stringLiterals)
+        {
+            string replaced = stringLiteral.Replace("\\n", "\\0A") + "\\00";
+            int backslash = replaced.Count(c => c == '\\');
+            int size = replaced.Length - 2 * backslash;
+            stringLiterals.AppendLine(
+                $"@.str.{stringId} = constant [{size} x i8] c\"{replaced}\"");
+        }
+        stringLiterals.AppendLine();
+        
+        return stringLiterals.ToString() + _ir.ToString() + "\n\ndeclare i32 @printf(ptr, ...)\n"; // import printf from c
     }
 
     private void GenStmt(Stmt stmt)
@@ -45,6 +59,9 @@ public class CodeGen(List<Stmt> ast)
                 break;
             case Stmt.ForStmt s:
                 GenForStmt(s);
+                break;
+            case Stmt.PrintfStmt s:
+                GenPrintfStmt(s);
                 break;
             default:
                 throw new NotImplementedException(stmt.GetType().Name);
@@ -79,33 +96,16 @@ public class CodeGen(List<Stmt> ast)
 
     private void GenReturn(Stmt.ReturnStmt r)
     {
-        switch (r.Expr)
-        {
-            case Expr.Literal.Integer i:
-                _ir.AppendLine($"  ret i32 {i.Value}");
-                break;
-            case Expr.Literal.Float f:
-                _ir.AppendLine($"  ret f32 {f.Value}");
-                break;
-            default:
-                int id = GenExpr(r.Expr);
-                _ir.AppendLine($"  ret {r.Expr.Type.LLVMName} %{id}");
-                break;
-        }
+        string value = r.Expr.LiteralValue ?? $"%{GenExpr(r.Expr)}";
+        _ir.AppendLine($"  ret {r.Expr.Type.LLVMName} {value}");
     }
 
     private void GenVarDeclaration(Stmt.VarDeclaration vd)
     {
         _functionScope.AddVar(vd.Name.Text, vd.Value.Type!);
         _ir.Append($"  %{vd.Name.Text} = alloca {vd.Value.Type.LLVMName}\n");
-        if (vd.Value.LiteralValue is not null)
-        {
-            _ir.AppendLine($"  store {vd.Value.Type.LLVMName} {vd.Value.LiteralValue}, ptr %{vd.Name.Text}");
-            return;
-        }
-        
-        int id = GenExpr(vd.Value);
-        _ir.AppendLine($"  store {vd.Value.Type.LLVMName} %{id}, ptr %{vd.Name.Text}");
+        string value = vd.Value.LiteralValue ?? $"%{GenExpr(vd.Value)}";
+        _ir.AppendLine($"  store {vd.Value.Type.LLVMName} {value}, ptr %{vd.Name.Text}");
     }
 
     private void GenIfStmt(Stmt.IfStmt ifStmt)
@@ -138,7 +138,7 @@ public class CodeGen(List<Stmt> ast)
     private void GenForStmt(Stmt.ForStmt forStmt)
     {
         string forBody = $"for_body{_identifier++}";
-        if (forStmt.Condition is null)
+        if (forStmt.Condition is null) //infinite loop
         {
             _ir.AppendLine($"  br label %{forBody}");
             _ir.AppendLine($"{forBody}:");
@@ -150,15 +150,43 @@ public class CodeGen(List<Stmt> ast)
         if (forStmt.Start is not null) GenStmt(forStmt.Start);
         string forCondition = $"for_condition{_identifier++}";
         string forEnd = $"for_end{_identifier++}";
+        string forIteration = $"for_iteration{_identifier++}";
         _ir.AppendLine($"  br label %{forCondition}");
         _ir.AppendLine($"{forCondition}:");
         int conditionId = GenExpr(forStmt.Condition);
         _ir.AppendLine($"  br i1 %{conditionId}, label %{forBody}, label %{forEnd}");
         _ir.AppendLine($"{forBody}:");
         GenStmt(forStmt.Body);
+        if (forStmt.Iteration is not null)
+        {
+            _ir.AppendLine($"  br label %{forIteration}");
+            _ir.AppendLine($"{forIteration}:");
+            GenExpr(forStmt.Iteration);
+        }
         _ir.AppendLine($"  br label %{forCondition}");
         _ir.AppendLine($"{forEnd}:");
-        //TODO gen iteration
+    }
+
+    private void GenPrintfStmt(Stmt.PrintfStmt printfStmt)
+    {
+        int id;
+        if (_stringLiterals.TryGetValue(printfStmt.Format.Value, out id) == false)
+        {
+            id = _stringLiterals.Count();
+            _stringLiterals.Add(printfStmt.Format.Value, id);
+        }
+
+        List<int> argIds = [];
+        foreach (var arg in printfStmt.Args)
+        {
+            argIds.Add(GenExpr(arg));
+        }
+        _ir.Append($"  %{_identifier++} = call i32 (ptr, ...) @printf(ptr @.str.{id}");
+        for (int i = 0; i < argIds.Count; i++)
+        {
+            _ir.Append($", {printfStmt.Args[i].Type.LLVMName} %{argIds[i]}");
+        }
+        _ir.AppendLine(")");
     }
     
     private void GenExpressionStmt(Stmt.Expression e)
@@ -196,15 +224,39 @@ public class CodeGen(List<Stmt> ast)
     {
         ExprType? type = _functionScope.GetVar(e.Name.Text);
         if (type is null) throw new Exception($"var {e.Name.Text} not found");
-        if (e.Value.LiteralValue is not null)
+
+        string value = "";
+        int finalId = -1; //TODO this doesn't work if we want a = b = 1
+        if (e.Op is not null)
         {
-            _ir.AppendLine($"  store {type.LLVMName} {e.Value.LiteralValue}, ptr %{e.Name.Text}");
-            return -1; //TODO allow assignment to be used as an expression?
+            _ir.AppendLine($"  %{_identifier} = load {type.LLVMName}, ptr %{e.Name.Text}");
+            _identifier++;
+            value = e.Value.LiteralValue ?? $"%{finalId = GenExpr(e.Value)}";
+            switch (e.Op.Type)
+            {
+                case TokenType.PlusEquals:
+                    _ir.AppendLine($"  %{_identifier} = add nsw {e.Type.LLVMName} %{_identifier - 1}, {value}");
+                    break;
+                case TokenType.MinusEquals:
+                    _ir.AppendLine($"  %{_identifier} = sub nsw {e.Type.LLVMName} %{_identifier - 1}, {value}");
+                    break;
+                case TokenType.StarEquals:
+                    _ir.AppendLine($"  %{_identifier} = mul nsw {e.Type.LLVMName} %{_identifier - 1}, {value}");
+                    break;
+                case TokenType.SlashEquals:
+                    _ir.AppendLine($"  %{_identifier} = sdiv {e.Type.LLVMName} %{_identifier - 1}, {value}");
+                    break;
+                default:
+                    throw new NotImplementedException($"{e.Op.Type} not implemented");
+            }
+            _ir.AppendLine($"  store {type.LLVMName} %{_identifier}, ptr %{e.Name.Text}");
+            _identifier++;
+            return finalId;
         }
         
-        int identifier = GenExpr(e.Value);
-        _ir.AppendLine($"  store {type.LLVMName} %{identifier}, ptr %{e.Name.Text}");
-        return identifier;
+        value = e.Value.LiteralValue ?? $"%{finalId = GenExpr(e.Value)}";
+        _ir.AppendLine($"  store {type.LLVMName} {value}, ptr %{e.Name.Text}");
+        return finalId;
     }
 
     private int GenBinary(Expr.Binary e)
@@ -225,6 +277,12 @@ public class CodeGen(List<Stmt> ast)
             case TokenType.Slash:
                 _ir.AppendLine($"  %{_identifier} = sdiv {e.Type.LLVMName} {leftValue}, {rightValue}");
                 break;
+            case TokenType.DoubleEquals:
+                _ir.AppendLine($"  %{_identifier} = icmp eq {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                break;
+            case TokenType.ExclamationEquals:
+                _ir.AppendLine($"  %{_identifier} = icmp ne {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                break;
             case TokenType.Greater:
                 _ir.AppendLine($"  %{_identifier} = icmp sgt {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
                 break;
@@ -236,6 +294,9 @@ public class CodeGen(List<Stmt> ast)
                 break;
             case TokenType.LessEquals:
                 _ir.AppendLine($"  %{_identifier} = icmp sle {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+                break;
+            case TokenType.Percent:
+                _ir.AppendLine($"  %{_identifier} = srem {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
                 break;
             default:
                 throw new NotImplementedException();

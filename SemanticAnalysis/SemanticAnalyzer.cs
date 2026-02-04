@@ -39,6 +39,9 @@ public class SemanticAnalyzer(List<Stmt> stmts)
             case Stmt.ForStmt s:
                 AnForStmt(s);
                 break;
+            case Stmt.PrintfStmt s:
+                AnPrintfStmt(s);
+                break;
             default:
                 throw new NotImplementedException();
         }
@@ -97,6 +100,15 @@ public class SemanticAnalyzer(List<Stmt> stmts)
         AnStmt(s.Body);
     }
 
+    private void AnPrintfStmt(Stmt.PrintfStmt s)
+    {
+        AnString(s.Format);
+        foreach (var arg in s.Args)
+        {
+            AnExpr(arg);
+        }
+    }
+
     private ExprType AnExpr(Expr e)
     {
         switch (e)
@@ -136,18 +148,21 @@ public class SemanticAnalyzer(List<Stmt> stmts)
     private ExprType AnInteger(Expr.Literal.Integer i)
     {
         i.LiteralValue = i.Value.ToString();
+        i.Type = ExprType.Ti32;
         return ExprType.Ti32;
     }
     
     private ExprType AnFloat(Expr.Literal.Float f)
     {
         f.LiteralValue = f.Value.ToString();
+        f.Type = ExprType.Tf32;
         return ExprType.Tf32;
     }
 
     private ExprType AnString(Expr.Literal.String s)
     {
         s.LiteralValue = s.Value;
+        s.Type = ExprType.Tstring;
         return ExprType.Tstring;
     }
 

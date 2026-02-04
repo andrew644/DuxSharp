@@ -10,7 +10,6 @@ public static class Keyword
         {
             ["and"]    = TokenType.And,
             ["or"]     = TokenType.Or,
-            ["mod"]     = TokenType.Mod,
             ["if"]     = TokenType.If,
             ["else"]   = TokenType.Else,
             ["true"]   = TokenType.True,
@@ -26,6 +25,7 @@ public static class Keyword
             ["continue"] = TokenType.Continue,
             ["goto"] = TokenType.Goto,
             ["import"] = TokenType.Import,
+            ["printf"] = TokenType.Printf,
         };
     }
 }

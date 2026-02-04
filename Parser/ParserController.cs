@@ -87,6 +87,10 @@ public class ParserController(List<Token> tokens)
         {
             return ForStatement();
         }
+        if (Match(TokenType.Printf))
+        {
+            return PrintfStatement();
+        }
         //TODO add defer
         return ExpressionStatement();
     }
@@ -162,6 +166,22 @@ public class ParserController(List<Token> tokens)
             body);
     }
 
+    private Stmt PrintfStatement()
+    {
+        List<Expr> args = [];
+        Consume(TokenType.OpenParen, "Printf needs (");
+        var literal = Consume(TokenType.StringLiteral, "Printf needs a format string like \"%d\\n\")");
+        var formatString = new Expr.Literal.String(TrimStringLiteral(literal.Text));
+        while (Match(TokenType.Comma))
+        {
+            args.Add(Expression());
+        }
+        Consume(TokenType.CloseParen, "Printf needs closing )");
+        Consume(TokenType.Newline, "Expected newline at end of statement.");
+        
+        return new Stmt.PrintfStmt(formatString, args);
+    }
+
     private Expr Expression()
     {
         return ParseExpression(0);
@@ -192,7 +212,7 @@ public class ParserController(List<Token> tokens)
                 new Expr.Literal.Float(Convert.ToDouble(token.Text)),
             
             TokenType.StringLiteral =>
-                new Expr.Literal.String(token.Text),
+                new Expr.Literal.String(TrimStringLiteral(token.Text)),
 
             TokenType.Identifier =>
                 new Expr.Variable(token),
@@ -208,6 +228,11 @@ public class ParserController(List<Token> tokens)
 
             _ => throw Error(token, "Expected expression.")
         };
+    }
+
+    private string TrimStringLiteral(string s)
+    {
+        return s.Substring(1, s.Length - 2);
     }
 
     private Expr ParseGrouping()
@@ -228,6 +253,7 @@ public class ParserController(List<Token> tokens)
             TokenType.Minus or
             TokenType.Star or
             TokenType.Slash or
+            TokenType.Percent or
             TokenType.Greater or 
             TokenType.GreaterEquals or  
             TokenType.Less or
@@ -236,13 +262,14 @@ public class ParserController(List<Token> tokens)
             TokenType.ExclamationEquals =>
                 new Expr.Binary(left, op, right),
 
-            TokenType.Equals or 
+            TokenType.Equals or
             TokenType.PlusEquals or 
             TokenType.MinusEquals or 
             TokenType.StarEquals or 
-            TokenType.SlashEquals =>
+            TokenType.SlashEquals or 
+            TokenType.PercentEquals =>
                 left is Expr.Variable v
-                    ? new Expr.Assign(v.Name, right)
+                    ? new Expr.Assign(v.Name, right, op)
                     : throw Error(op, "Invalid assignment target."),
             
             _ => throw Error(op, "Unknown operator.")

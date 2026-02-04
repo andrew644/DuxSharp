@@ -79,6 +79,9 @@ public static class Printer
             
             Stmt.ReturnStmt s =>
                 Parenthesize("return", s.Expr),
+            
+            Stmt.PrintfStmt s =>
+                Parenthesize("prinft", s.Format, s.Args.Select(Print)),
 
             _ => throw new NotImplementedException(stmt.GetType().Name)
         };

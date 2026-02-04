@@ -14,11 +14,12 @@ public enum TokenType
     Less,
     Greater,
     ExclamationEquals,
-    Mod,
+    Percent,
     PlusEquals,
     MinusEquals,
     StarEquals,
     SlashEquals,
+    PercentEquals,
     
     // Groups
     OpenParen,
@@ -72,4 +73,7 @@ public enum TokenType
     
     // Package
     Import,
+    
+    // To be removed
+    Printf,
 }

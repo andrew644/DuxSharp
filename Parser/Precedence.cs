@@ -34,7 +34,8 @@ public static class Precedence
         TokenType.Plus 
             or TokenType.Minus => Term,
         TokenType.Star 
-            or TokenType.Slash => Factor,
+            or TokenType.Slash
+            or TokenType.Percent => Factor,
         TokenType.Exclamation => throw new Exception("We shouldn't get here, this is unary !"),
         _ => None
     };

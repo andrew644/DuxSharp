@@ -112,6 +112,12 @@ public class LexerController(string file)
                         {'=', TokenType.ExclamationEquals},
                     });
                     break;
+                case '%':
+                    LexDoubleChar(TokenType.Percent, new Dictionary<char, TokenType>
+                    {
+                        {'=', TokenType.PercentEquals},
+                    });
+                    break;
                 case ':':
                     LexDoubleChar(TokenType.Colon, new Dictionary<char, TokenType>
                     {
