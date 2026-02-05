@@ -1,3 +1,4 @@
+using DuxSharp.Lexer;
 using DuxSharp.Parser;
 
 namespace DuxSharp.SemanticAnalysis;
@@ -139,8 +140,20 @@ public class SemanticAnalyzer(List<Stmt> stmts)
 
     private ExprType AnBinary(Expr.Binary e)
     {
-        AnExpr(e.Left);
-        return e.Type = AnExpr(e.Right);
+        var ltype = AnExpr(e.Left);
+        var rtype = AnExpr(e.Right);
+        var otype = e.Operator.Type switch
+        {
+            TokenType.DoubleEquals
+                or TokenType.ExclamationEquals
+                or TokenType.Less
+                or TokenType.LessEquals
+                or TokenType.Greater
+                or TokenType.GreaterEquals => ExprType.Tbool,
+            
+            _ => null,
+        };
+        return e.Type = otype ?? rtype;
     }
 
     private ExprType AnUnary(Expr.Unary e)

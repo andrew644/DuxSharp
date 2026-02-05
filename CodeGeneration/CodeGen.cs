@@ -330,6 +330,12 @@ public class CodeGen(List<Stmt> ast)
             case TokenType.Percent:
                 operation = "srem";
                 break;
+            case TokenType.And:
+                operation = "and";
+                break;
+            case TokenType.Or:
+                operation = "or";
+                break;
             default:
                 throw new NotImplementedException();
         }
@@ -346,7 +352,13 @@ public class CodeGen(List<Stmt> ast)
             argCode.Add(arg.LiteralValue ?? $"%{GenExpr(arg)}");
         }
 
-        _ir.Append($"  %{_identifier} = call {f.Type.LLVMName} @{f.Name.Text}(");
+        string returnType = "void";
+        if (f.Type is not null)
+        {
+            returnType = f.Type.LLVMName;
+        }
+        //TODO if it is void we can't have a %id = call   it needs to be just call
+        _ir.Append($"  %{_identifier} = call {returnType} @{f.Name.Text}(");
         for (int i = 0; i < argCode.Count; i++)
         {
             if (i > 0)

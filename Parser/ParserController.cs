@@ -289,6 +289,8 @@ public class ParserController(List<Token> tokens)
             TokenType.Less or
             TokenType.LessEquals or 
             TokenType.DoubleEquals or 
+            TokenType.Or or
+            TokenType.And or
             TokenType.ExclamationEquals =>
                 new Expr.Binary(left, op, right),
 
