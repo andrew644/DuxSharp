@@ -89,6 +89,11 @@ public class CodeGen(List<Stmt> ast)
         {
             GenStmt(stmt);
         }
+
+        if (function.ReturnType is null)
+        {
+            _ir.AppendLine("  ret void");
+        }
         _ir.AppendLine("}");
     }
 
