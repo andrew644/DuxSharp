@@ -8,12 +8,15 @@ namespace DuxSharp.CodeGeneration;
 public class CodeGen(List<Stmt> ast)
 {
     private readonly StringBuilder _ir = new StringBuilder();
+    private readonly StringBuilder _irHeader = new StringBuilder();
     private readonly Dictionary<string, int> _stringLiterals = new Dictionary<string, int>();
     private int _identifier = 1;
     private VarScope _functionScope = new VarScope();
 
     public string Generate()
     {
+        _irHeader.AppendLine("target triple = \"x86_64-pc-linux-gnu\"");
+        
         foreach (var stmt in ast)
         {
             GenStmt(stmt);
@@ -32,7 +35,10 @@ public class CodeGen(List<Stmt> ast)
         }
         stringLiterals.AppendLine();
         
-        return stringLiterals.ToString() + _ir.ToString() + "\n\ndeclare i32 @printf(ptr, ...)\n"; // import printf from c
+        return _irHeader.ToString()
+               + stringLiterals.ToString()
+               + _ir.ToString()
+               + "\n\ndeclare i32 @printf(ptr, ...)\n"; // import printf from c
     }
 
     private void GenStmt(Stmt stmt)

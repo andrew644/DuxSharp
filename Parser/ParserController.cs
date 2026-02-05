@@ -110,8 +110,14 @@ public class ParserController(List<Token> tokens)
         Stmt? elseStmt = null;
         if (Match(TokenType.Else))
         {
-            Match(TokenType.OpenCurly);
-            elseStmt = new Stmt.Block(Block());
+            if (Match(TokenType.OpenCurly))
+            {
+                elseStmt = new Stmt.Block(Block());
+            }
+            else if (Match(TokenType.If))
+            {
+                elseStmt = IfStatement();
+            }
         }
 
         return new Stmt.IfStmt(e, body, elseStmt);

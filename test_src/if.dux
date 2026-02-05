@@ -1,9 +1,11 @@
 fn main() -> i32 {
-	test := 5
-	if test >= 1 {
-		return 1
+	test := 1
+	if test == 1 {
+	    printf("1:test is: %d\n", test)
+	} else if test == 2 {
+	    printf("2:test is: %d\n", test)
 	} else {
-	    return 49
+	    printf("3:test is: %d\n", test)
 	}
 
 	return 0
