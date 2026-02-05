@@ -1,10 +1,12 @@
 using System.Text;
 using DuxSharp.Lexer;
+using DuxSharp.SemanticAnalysis;
 
 namespace DuxSharp.Parser;
 
 public class ParserController(List<Token> tokens)
 {
+    public Scope Scope { get; } = new Scope();
     private List<Stmt> _stmts = [];
     private int _current;
     public List<Stmt> Parse()
@@ -49,10 +51,14 @@ public class ParserController(List<Token> tokens)
         var name = Consume(TokenType.Identifier, "Expected function name.");
         Consume(TokenType.OpenParen, "Expected open paren after function name.");
         
-        var args = new List<(string name, ExprType? type)>();
-        if (!Check(TokenType.CloseParen))
+        var args = new List<(Token name, ExprType? type)>();
+        while (!Check(TokenType.CloseParen))
         {
-            //TODO args
+            var argName = Consume(TokenType.Identifier, "Expected argument name.");
+            Consume(TokenType.Colon, "Expected ':' after argument name.");
+            var argType = Consume(TokenType.Identifier, "Expected argument type.");
+            args.Add((argName, ExprType.GetType(argType.Text)));
+            Match(TokenType.Comma); //dangling commas are ok!
         }
         
         Consume(TokenType.CloseParen, "Expected close paren.");
@@ -63,6 +69,7 @@ public class ParserController(List<Token> tokens)
             var returnTypeToken = Consume(TokenType.Identifier, "Expected function return type");
             returnType = ExprType.GetType(returnTypeToken.Text);
         }
+        Scope.AddFunction(name.Text, returnType);
         Consume(TokenType.OpenCurly, "Expected open brace.");
 
         var body = Block();
@@ -221,7 +228,7 @@ public class ParserController(List<Token> tokens)
                 new Expr.Literal.String(TrimStringLiteral(token.Text)),
 
             TokenType.Identifier =>
-                new Expr.Variable(token),
+                ParseIdentifier(token),
 
             TokenType.Minus =>
                 new Expr.Unary(token, ParseExpression(Precedence.Unary)),
@@ -234,6 +241,23 @@ public class ParserController(List<Token> tokens)
 
             _ => throw Error(token, "Expected expression.")
         };
+    }
+
+    private Expr ParseIdentifier(Token token)
+    {
+        if (Match(TokenType.OpenParen)) // function call
+        {
+            List<Expr> args = [];
+            while (!Match(TokenType.CloseParen))
+            {
+                Expr arg = ParseExpression(0);
+                args.Add(arg);
+                Match(TokenType.Comma); // dangling commas are ok. Does this make them optional though?
+            }
+            return new Expr.FunctionCall(token, args);
+        }
+
+        return new Expr.Variable(token);
     }
 
     private string TrimStringLiteral(string s)

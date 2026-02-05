@@ -11,7 +11,7 @@ public class CodeGen(List<Stmt> ast)
     private readonly StringBuilder _irHeader = new StringBuilder();
     private readonly Dictionary<string, int> _stringLiterals = new Dictionary<string, int>();
     private int _identifier = 1;
-    private VarScope _functionScope = new VarScope();
+    private Scope _scope = new Scope();
 
     public string Generate()
     {
@@ -77,14 +77,32 @@ public class CodeGen(List<Stmt> ast)
     private void GenFunction(Stmt.Function function)
     {
         _identifier = 1;
-        _functionScope = new VarScope();
+        _scope = new Scope();
         
         _ir.Append("define ");
         _ir.Append(function.ReturnType is not null ? function.ReturnType.LLVMName : "void");
-
         _ir.Append($" @{function.Name.Text}(");
-        //TODO args
+        
+        // Args
+        bool first = true;
+        StringBuilder argsAlloca = new StringBuilder();
+        _identifier--; // function args start at %0 not %1
+        foreach (var arg in function.Args)
+        {
+            if (!first) _ir.Append(", ");
+            _ir.Append($"{arg.type.LLVMName} %{_identifier}");
+            argsAlloca.AppendLine($"  %{arg.name.Text} = alloca {arg.type.LLVMName}");
+            argsAlloca.AppendLine($"  store {arg.type.LLVMName} %{_identifier}, ptr %{arg.name.Text}");
+            _scope.AddVar(arg.name.Text, arg.type);
+            _identifier++;
+            first = false;
+        }
+
+        _identifier++; // function args start at %0 not %1, now we go back up
+        
+        // Body
         _ir.AppendLine(") {");
+        _ir.AppendLine(argsAlloca.ToString());
         foreach (var stmt in function.Body)
         {
             GenStmt(stmt);
@@ -113,7 +131,7 @@ public class CodeGen(List<Stmt> ast)
 
     private void GenVarDeclaration(Stmt.VarDeclaration vd)
     {
-        _functionScope.AddVar(vd.Name.Text, vd.Value.Type!);
+        _scope.AddVar(vd.Name.Text, vd.Value.Type!);
         _ir.Append($"  %{vd.Name.Text} = alloca {vd.Value.Type.LLVMName}\n");
         string value = vd.Value.LiteralValue ?? $"%{GenExpr(vd.Value)}";
         _ir.AppendLine($"  store {vd.Value.Type.LLVMName} {value}, ptr %{vd.Name.Text}");
@@ -187,15 +205,15 @@ public class CodeGen(List<Stmt> ast)
             _stringLiterals.Add(printfStmt.Format.Value, id);
         }
 
-        List<int> argIds = [];
+        List<string> argCode = [];
         foreach (var arg in printfStmt.Args)
         {
-            argIds.Add(GenExpr(arg));
+            argCode.Add(arg.LiteralValue ?? $"%{GenExpr(arg)}");
         }
         _ir.Append($"  %{_identifier++} = call i32 (ptr, ...) @printf(ptr @.str.{id}");
-        for (int i = 0; i < argIds.Count; i++)
+        for (int i = 0; i < argCode.Count; i++)
         {
-            _ir.Append($", {printfStmt.Args[i].Type.LLVMName} %{argIds[i]}");
+            _ir.Append($", {printfStmt.Args[i].Type.LLVMName} {argCode[i]}");
         }
         _ir.AppendLine(")");
     }
@@ -215,13 +233,15 @@ public class CodeGen(List<Stmt> ast)
                 return GenAssign(e);
             case Expr.Binary e:
                 return GenBinary(e);
+            case Expr.FunctionCall e:
+                return GenFunctionCall(e);
             default:
                 throw new NotImplementedException(expr.GetType().Name);
         }
     }
     private int GenVariable(Expr.Variable v)
     {
-        ExprType? type = _functionScope.GetVar(v.Name.Text);
+        ExprType? type = _scope.GetVar(v.Name.Text);
         if (type is null)
         {
             throw new Exception($"Variable {v.Name.Text} not found");
@@ -233,7 +253,7 @@ public class CodeGen(List<Stmt> ast)
 
     private int GenAssign(Expr.Assign e)
     {
-        ExprType? type = _functionScope.GetVar(e.Name.Text);
+        ExprType? type = _scope.GetVar(e.Name.Text);
         if (type is null) throw new Exception($"var {e.Name.Text} not found");
 
         string value = "";
@@ -315,6 +335,28 @@ public class CodeGen(List<Stmt> ast)
         }
         _ir.AppendLine($"  %{_identifier} = {operation} {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
 
+        return _identifier++;
+    }
+
+    private int GenFunctionCall(Expr.FunctionCall f)
+    {
+        List<string> argCode = [];
+        foreach (var arg in f.Args)
+        {
+            argCode.Add(arg.LiteralValue ?? $"%{GenExpr(arg)}");
+        }
+
+        _ir.Append($"  %{_identifier} = call {f.Type.LLVMName} @{f.Name.Text}(");
+        for (int i = 0; i < argCode.Count; i++)
+        {
+            if (i > 0)
+            {
+                _ir.Append(", ");
+            }
+            _ir.Append($"{f.Args[i].Type.LLVMName} {argCode[i]}");
+        }
+        _ir.AppendLine(")");
+        
         return _identifier++;
     }
 }

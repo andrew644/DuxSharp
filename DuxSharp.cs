@@ -32,7 +32,7 @@ public static class DuxSharp
         
         Console.WriteLine("\nAnalyzing:");
         var analyzer = new SemanticAnalyzer(ast);
-        analyzer.Analize();
+        analyzer.Analize(parser.Scope);
         Console.WriteLine(parser);
         
         Console.WriteLine("\nCodegen...");

@@ -18,5 +18,6 @@ public abstract record Expr()
     }
     public record Grouping(Expr Expression) : Expr;
     public record Variable(Token Name) : Expr;
+    public record FunctionCall(Token Name, List<Expr> Args) : Expr;
     public record Assign(Token Name, Expr Value, Token Op) : Expr; 
 }

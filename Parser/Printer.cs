@@ -18,6 +18,9 @@ public static class Printer
             Expr.Variable v =>
                 v.Name.Text,
 
+            Expr.FunctionCall e =>
+                Parenthesize(e.Name.Text, e.Args.Select(Print)),
+            
             Expr.Assign a =>
                 Parenthesize("assign", a.Name.Text, Print(a.Value)),
 
@@ -55,7 +58,7 @@ public static class Printer
                 Parenthesize(
                     "fn",
                     s.Name.Text,
-                    Parenthesize("params", s.Args.Select(p => $"{p.name}: {p.type}")),
+                    Parenthesize("params", s.Args.Select(p => $"{p.name.Text}: {p.type.LLVMName}")),
                     Parenthesize("returns", s.ReturnType is not null ? s.ReturnType.LLVMName : "void"),
                     Parenthesize("body", s.Body.Select(Print))
                 ),
@@ -78,7 +81,7 @@ public static class Printer
                 ),
             
             Stmt.ReturnStmt s =>
-                Parenthesize("return", s.Expr),
+                Parenthesize("return", Print(s.Expr)),
             
             Stmt.PrintfStmt s =>
                 Parenthesize("prinft", s.Format, s.Args.Select(Print)),

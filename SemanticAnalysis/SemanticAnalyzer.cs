@@ -4,10 +4,11 @@ namespace DuxSharp.SemanticAnalysis;
 
 public class SemanticAnalyzer(List<Stmt> stmts) 
 {
-    private VarScope _functionScope = new VarScope();
+    private Scope _scope = new Scope();
     
-    public void Analize()
+    public void Analize(Scope scope)
     {
+        _scope = scope;
         foreach (var stmt in stmts)
         {
             AnStmt(stmt);
@@ -62,10 +63,10 @@ public class SemanticAnalyzer(List<Stmt> stmts)
 
     private void AnFunction(Stmt.Function f)
     {
-        _functionScope = new VarScope();
+        _scope.ResetVars();
         foreach (var arg in f.Args)
         {
-            //TODO
+            _scope.AddVar(arg.name.Text, arg.type);
         }
 
         foreach (var stmt in f.Body)
@@ -77,7 +78,7 @@ public class SemanticAnalyzer(List<Stmt> stmts)
     private void AnVarDeclaration(Stmt.VarDeclaration v)
     {
         v.Value.Type = AnExpr(v.Value);
-        _functionScope.AddVar(v.Name.Text, v.Value.Type);
+        _scope.AddVar(v.Name.Text, v.Value.Type);
     }
 
     private void AnReturnStmt(Stmt.ReturnStmt r)
@@ -129,6 +130,8 @@ public class SemanticAnalyzer(List<Stmt> stmts)
                 return AnVariable(v);
             case Expr.Assign a:
                 return AnAssign(a);
+            case Expr.FunctionCall f:
+                return AnFunctionCall(f);
             default:
                 throw new NotImplementedException();
         }        
@@ -173,7 +176,7 @@ public class SemanticAnalyzer(List<Stmt> stmts)
 
     private ExprType AnVariable(Expr.Variable e)
     {
-        ExprType? type = _functionScope.GetVar(e.Name.Text);
+        ExprType? type = _scope.GetVar(e.Name.Text);
         if (type is null) throw new Exception($"Variable '{e.Name.Text}' not found");
         return e.Type = type;
     }
@@ -181,5 +184,14 @@ public class SemanticAnalyzer(List<Stmt> stmts)
     private ExprType AnAssign(Expr.Assign e)
     {
         return e.Type = AnExpr(e.Value);
+    }
+
+    private ExprType AnFunctionCall(Expr.FunctionCall e)
+    {
+        foreach (var arg in e.Args)
+        {
+            AnExpr(arg);
+        }
+        return e.Type = _scope.GetFunction(e.Name.Text);
     }
 }
