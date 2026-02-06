@@ -4,8 +4,8 @@ namespace DuxSharp.SemanticAnalysis;
 
 public class Scope
 {
-    private Dictionary<string, ExprType> _environmentVar = new Dictionary<string, ExprType>();
-    private Dictionary<string, ExprType> _environmentFunc = new Dictionary<string, ExprType>();
+    private readonly Dictionary<string, ExprType> _environmentVar = new Dictionary<string, ExprType>();
+    private readonly Dictionary<string, ExprType> _environmentFunc = new Dictionary<string, ExprType>();
 
     public void AddVar(string name, ExprType type)
     {
