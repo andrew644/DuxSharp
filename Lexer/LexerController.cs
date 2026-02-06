@@ -1,5 +1,3 @@
-using DuxSharp.Extension;
-
 namespace DuxSharp.Lexer;
 
 public class LexerController(string file)
@@ -250,7 +248,7 @@ public class LexerController(string file)
     {
         while (IsAlphaNumeric(Peek())) Advance();
         string text = file.Substring(_tokenStart, _index - _tokenStart + 1);
-        TokenType type = Keyword.Keywords.GetOrDefault(text, TokenType.Identifier);
+        TokenType type = Keyword.Keywords.GetValueOrDefault(text, TokenType.Identifier);
         AddToken(type);
     }
 }
