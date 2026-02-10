@@ -1,4 +1,4 @@
-namespace DuxSharp.Lexer;
+namespace Compiler.Lexer;
 
 public record Token(string Text, int Line, int Column, TokenType Type)
 {

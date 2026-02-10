@@ -1,6 +1,6 @@
-using DuxSharp.Lexer;
+using Compiler.Lexer;
 
-namespace DuxSharp.Parser;
+namespace Compiler.Parser;
 
 public class ExprType
 {

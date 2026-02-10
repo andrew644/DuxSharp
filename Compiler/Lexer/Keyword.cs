@@ -1,4 +1,4 @@
-namespace DuxSharp.Lexer;
+namespace Compiler.Lexer;
 
 public static class Keyword
 {

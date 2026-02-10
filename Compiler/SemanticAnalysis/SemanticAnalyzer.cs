@@ -1,7 +1,7 @@
-using DuxSharp.Lexer;
-using DuxSharp.Parser;
+using Compiler.Lexer;
+using Compiler.Parser;
 
-namespace DuxSharp.SemanticAnalysis;
+namespace Compiler.SemanticAnalysis;
 
 public class SemanticAnalyzer(List<Stmt> stmts) 
 {

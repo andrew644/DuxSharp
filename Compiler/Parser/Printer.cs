@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace DuxSharp.Parser;
+namespace Compiler.Parser;
 
 public static class Printer
 {

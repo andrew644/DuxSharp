@@ -1,6 +1,6 @@
-using DuxSharp.Parser;
+using Compiler.Parser;
 
-namespace DuxSharp.SemanticAnalysis;
+namespace Compiler.SemanticAnalysis;
 
 public class Scope
 {

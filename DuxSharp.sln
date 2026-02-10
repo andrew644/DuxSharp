@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DuxSharp", "DuxSharp\DuxSharp.csproj", "{8BCDEA05-1AA4-4FDE-B1B0-53644D072EFE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Compiler", "Compiler\Compiler.csproj", "{8BCDEA05-1AA4-4FDE-B1B0-53644D072EFE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{F8E12766-5B5E-4C50-86D3-D5A20493D12F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +14,9 @@ Global
 		{8BCDEA05-1AA4-4FDE-B1B0-53644D072EFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8BCDEA05-1AA4-4FDE-B1B0-53644D072EFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8BCDEA05-1AA4-4FDE-B1B0-53644D072EFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8E12766-5B5E-4C50-86D3-D5A20493D12F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8E12766-5B5E-4C50-86D3-D5A20493D12F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8E12766-5B5E-4C50-86D3-D5A20493D12F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8E12766-5B5E-4C50-86D3-D5A20493D12F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

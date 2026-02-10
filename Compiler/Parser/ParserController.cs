@@ -1,8 +1,8 @@
 using System.Text;
-using DuxSharp.Lexer;
-using DuxSharp.SemanticAnalysis;
+using Compiler.Lexer;
+using Compiler.SemanticAnalysis;
 
-namespace DuxSharp.Parser;
+namespace Compiler.Parser;
 
 public class ParserController(List<Token> tokens)
 {

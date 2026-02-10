@@ -1,9 +1,9 @@
 using System.Text;
-using DuxSharp.Lexer;
-using DuxSharp.Parser;
-using DuxSharp.SemanticAnalysis;
+using Compiler.Lexer;
+using Compiler.Parser;
+using Compiler.SemanticAnalysis;
 
-namespace DuxSharp.CodeGeneration;
+namespace Compiler.CodeGeneration;
 
 public class CodeGen(List<Stmt> ast)
 {

@@ -1,11 +1,11 @@
-using DuxSharp.CodeGeneration;
-using DuxSharp.Lexer;
-using DuxSharp.Parser;
-using DuxSharp.SemanticAnalysis;
+using Compiler.CodeGeneration;
+using Compiler.Lexer;
+using Compiler.Parser;
+using Compiler.SemanticAnalysis;
 
-namespace DuxSharp;
+namespace Compiler;
 
-public static class DuxSharp
+public static class Entry
 {
     public static void Main(string[] args)
     {
