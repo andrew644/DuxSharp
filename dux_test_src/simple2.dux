@@ -1,21 +1,21 @@
 fn main() -> i32 {
 	sum := 7
-	dog := 1
+	dog := 2
 	cat := 5 / 2
 	sun := 5 * 5
-	return dog + sum + 5 / cat + sun
+	return dog + sum + 5 / cat + sun + addOne(5) + test()
 }
 
 /* message */
-fn add() -> i32 {
+fn addOne(a: i32) -> i32 {
         
     //test := 5 * 5
     //test2 := test
     //test3 := 5 * 5 + 5
     
-    return 5
+    return a + 1
 }
 
-fn test() -> i64 {
+fn test() -> i32 {
     return 1
 }
