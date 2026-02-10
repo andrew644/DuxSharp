@@ -34,7 +34,7 @@ public class TestAll
     public void RunTests(string name, int expectedExitCode)
     {
         const string baseDir = "../../../../";
-        const string testDir = $"{baseDir}dux_test_src/";
+        const string testDir = $"{baseDir}DuxTestSrc/";
         const string outDir = $"{testDir}out/";
         var irPath = $"{outDir}{name}.ll";
         var binPath = $"{outDir}{name}";
