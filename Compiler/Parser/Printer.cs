@@ -21,8 +21,11 @@ public static class Printer
             Expr.FunctionCall e =>
                 Parenthesize(e.Name.Text, e.Args.Select(Print)),
             
+            Expr.ArrayIndex e =>
+                Parenthesize("[]", e.Name.Text, Print(e.Index)),
+            
             Expr.Assign a =>
-                Parenthesize("assign", a.Name.Text, Print(a.Value)),
+                Parenthesize("assign", Print(a.LValue), Print(a.Value), a.Op.Text),
 
             Expr.Unary u =>
                 Parenthesize(u.Op.Text, Print(u.Right)),
@@ -49,7 +52,7 @@ public static class Printer
                 Print(s.Expr),
 
             Stmt.VarDeclaration s =>
-                Parenthesize("var", s.Name.Text, Print(s.Value)),
+                Parenthesize("var", s.Name.Text, s.Value is not null ? Print(s.Value) : "void"),
 
             Stmt.Block s =>
                 Parenthesize("block", s.Statements.Select(Print)),

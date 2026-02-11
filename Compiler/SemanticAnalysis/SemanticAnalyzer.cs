@@ -78,8 +78,14 @@ public class SemanticAnalyzer(List<Stmt> stmts)
 
     private void AnVarDeclaration(Stmt.VarDeclaration v)
     {
-        v.Value.Type = AnExpr(v.Value);
-        _scope.AddVar(v.Name.Text, v.Value.Type);
+        if (v.Value is not null)
+        {
+            v.Value.Type = AnExpr(v.Value);
+        }
+
+        ExprType type = v.Type ?? v.Value.Type;
+        
+        _scope.AddVar(v.Name.Text, type);
     }
 
     private void AnReturnStmt(Stmt.ReturnStmt r)
@@ -133,6 +139,8 @@ public class SemanticAnalyzer(List<Stmt> stmts)
                 return AnAssign(a);
             case Expr.FunctionCall f:
                 return AnFunctionCall(f);
+            case Expr.ArrayIndex a:
+                return AnArrayIndex(a);
             default:
                 throw new NotImplementedException();
         }        
@@ -196,6 +204,7 @@ public class SemanticAnalyzer(List<Stmt> stmts)
 
     private ExprType AnAssign(Expr.Assign e)
     {
+        AnExpr(e.LValue); //TODO check that this is a valid lvalue
         return e.Type = AnExpr(e.Value);
     }
 
@@ -206,5 +215,13 @@ public class SemanticAnalyzer(List<Stmt> stmts)
             AnExpr(arg);
         }
         return e.Type = _scope.GetFunction(e.Name.Text);
+    }
+
+    private ExprType AnArrayIndex(Expr.ArrayIndex e)
+    {
+        AnExpr(e.Index);
+        ExprType? type = _scope.GetVar(e.Name.Text);
+        if (type is null) throw new Exception($"Variable '{e.Name.Text}' not found");
+        return e.Type = type;
     }
 }

@@ -37,7 +37,7 @@ public class ParserController(List<Token> tokens)
         }
         
         if (CheckAhead(TokenType.Identifier, TokenType.ColonEquals) 
-            || CheckAhead(TokenType.Identifier, TokenType.Colon)) //TODO support this?
+            || CheckAhead(TokenType.Identifier, TokenType.Colon))
         {
             return VarDeclaration();
         }
@@ -48,10 +48,17 @@ public class ParserController(List<Token> tokens)
     private Stmt VarDeclaration()
     {
         var name = Consume(TokenType.Identifier, "Expected var name");
-        Consume(TokenType.ColonEquals, "Expected ':=' after variable name.");
-        var expr = Expression();
+        if (Match(TokenType.ColonEquals))
+        {
+            var expr = Expression();
+            Consume(TokenType.Newline, "Expected newline at end of statement.");
+            return new Stmt.VarDeclaration(name, expr);
+        }
+        Consume(TokenType.Colon, "Expected ':' or ':=' after variable name.");
+        ExprType type = ParseType();
         Consume(TokenType.Newline, "Expected newline at end of statement.");
-        return new Stmt.VarDeclaration(name, expr);
+        //TODO support   duckCount : i32 = 5
+        return new Stmt.VarDeclaration(name, null, type);
     }
 
     private Stmt FunctionDeclaration()
@@ -260,9 +267,16 @@ public class ParserController(List<Token> tokens)
             {
                 Expr arg = ParseExpression(0);
                 args.Add(arg);
-                Match(TokenType.Comma); // dangling commas are ok. Does this make them optional though?
+                Match(TokenType.Comma); // dangling commas are ok. TODO check: Does this make them optional though?
             }
             return new Expr.FunctionCall(token, args);
+        }
+
+        if (Match(TokenType.OpenSquare)) // Array index
+        {
+            Expr index = ParseExpression(0);
+            Consume(TokenType.CloseSquare, "Expected closing ].");
+            return new Expr.ArrayIndex(token, index);
         }
 
         return new Expr.Variable(token);
@@ -308,9 +322,7 @@ public class ParserController(List<Token> tokens)
             TokenType.StarEquals or 
             TokenType.SlashEquals or 
             TokenType.PercentEquals =>
-                left is Expr.Variable v
-                    ? new Expr.Assign(v.Name, right, op)
-                    : throw Error(op, "Invalid assignment target."),
+                new Expr.Assign(left, right, op),
             
             _ => throw Error(op, "Unknown operator.")
         };
@@ -337,6 +349,26 @@ public class ParserController(List<Token> tokens)
         Consume(TokenType.CloseCurly, "Expected '}' after block.");
         MatchNewlines();
         return statements;
+    }
+
+    private ExprType ParseType()
+    {
+        int arraySize = 0;
+        if (Match(TokenType.OpenSquare))
+        {
+            Token arraySizeToken = Consume(TokenType.IntegerLiteral, "Expected array size in [].");
+            arraySize = Convert.ToInt32(arraySizeToken.Text);
+            Consume(TokenType.CloseSquare, "Expected closing ].");
+        }
+
+        Token typeToken = Consume(TokenType.Identifier, "Expected type.");
+        ExprType? type = ExprType.GetType(typeToken.Text);
+        if (type is null) throw Error(typeToken, $"Could not parse type {typeToken.Text}.");
+        if (arraySize > 0)
+        {
+            return new ExprType($"[{arraySize} x {type.LLVMName}]", arraySize);
+        }
+        return type;
     }
 
     private void MatchNewlines()

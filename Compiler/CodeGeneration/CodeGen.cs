@@ -131,8 +131,11 @@ public class CodeGen(List<Stmt> ast)
 
     private void GenVarDeclaration(Stmt.VarDeclaration vd)
     {
-        _scope.AddVar(vd.Name.Text, vd.Value.Type!);
-        _ir.Append($"  %{vd.Name.Text} = alloca {vd.Value.Type.LLVMName}\n");
+        ExprType type = vd.Type ?? vd.Value.Type;
+        _scope.AddVar(vd.Name.Text, type);
+        _ir.Append($"  %{vd.Name.Text} = alloca {type.LLVMName}\n");
+        
+        if (vd.Value is null) return;
         string value = vd.Value.LiteralValue ?? $"%{GenExpr(vd.Value)}";
         _ir.AppendLine($"  store {vd.Value.Type.LLVMName} {value}, ptr %{vd.Name.Text}");
     }
@@ -253,14 +256,28 @@ public class CodeGen(List<Stmt> ast)
 
     private int GenAssign(Expr.Assign e)
     {
-        ExprType? type = _scope.GetVar(e.Name.Text);
-        if (type is null) throw new Exception($"var {e.Name.Text} not found");
+        string lvalueName;
+        switch (e.LValue)
+        {
+            case Expr.Variable lvalue:
+                lvalueName = lvalue.Name.Text;
+                break;
+            case Expr.ArrayIndex lvalue:
+                lvalueName = lvalue.Name.Text;
+                break;
+            default:
+                throw new Exception("Unsupported lvalue");
+        }
+        //TODO support arr[5]
+        
+        ExprType? type = _scope.GetVar(lvalueName);
+        if (type is null) throw new Exception($"var {lvalueName} not found");
 
         string value = "";
         int finalId = -1; //TODO this doesn't work if we want a = b = 1
-        if (e.Op is not null)
+        if (e.Op.Type is not TokenType.Equals)
         {
-            _ir.AppendLine($"  %{_identifier} = load {type.LLVMName}, ptr %{e.Name.Text}");
+            _ir.AppendLine($"  %{_identifier} = load {type.LLVMName}, ptr %{lvalueName}");
             _identifier++;
             value = e.Value.LiteralValue ?? $"%{finalId = GenExpr(e.Value)}";
             switch (e.Op.Type)
@@ -280,13 +297,13 @@ public class CodeGen(List<Stmt> ast)
                 default:
                     throw new NotImplementedException($"{e.Op.Type} not implemented");
             }
-            _ir.AppendLine($"  store {type.LLVMName} %{_identifier}, ptr %{e.Name.Text}");
+            _ir.AppendLine($"  store {type.LLVMName} %{_identifier}, ptr %{lvalueName}");
             _identifier++;
             return finalId;
         }
         
         value = e.Value.LiteralValue ?? $"%{finalId = GenExpr(e.Value)}";
-        _ir.AppendLine($"  store {type.LLVMName} {value}, ptr %{e.Name.Text}");
+        _ir.AppendLine($"  store {type.LLVMName} {value}, ptr %{lvalueName}");
         return finalId;
     }
 

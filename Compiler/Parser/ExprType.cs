@@ -28,10 +28,17 @@ public class ExprType
     
     public ExprType(string llvmName)
     {
-        this.LLVMName = llvmName;
+        LLVMName = llvmName;
+    }
+
+    public ExprType(string llvmName, int arraySize)
+    {
+        LLVMName = llvmName;
+        ArraySize = arraySize;
     }
 
     public string LLVMName { get; private set; }
+    public int ArraySize { get; private set; }
 
     public override string ToString()
     {
