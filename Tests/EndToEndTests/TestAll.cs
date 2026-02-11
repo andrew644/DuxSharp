@@ -31,6 +31,7 @@ public class TestAll
     [InlineData("fizzbuzz", 40)] //TODO void main returns 40. Should we force this to be 0?
     [InlineData("simple1", 42)]
     [InlineData("simple2", 43)]
+    [InlineData("void_function", 0)]
     public void RunTests(string name, int expectedExitCode)
     {
         const string baseDir = "../../../../";

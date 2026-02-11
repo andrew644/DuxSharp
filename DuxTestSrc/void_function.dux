@@ -1,0 +1,14 @@
+fn test() {
+	printf("This is void\n")
+}
+
+fn main() -> i32 {
+	test()
+
+	for i := 0, i < 10, test() {
+		test()
+		i += 1
+	}
+
+	return 0
+}
