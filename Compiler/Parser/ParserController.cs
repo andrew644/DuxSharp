@@ -13,7 +13,16 @@ public class ParserController(List<Token> tokens)
     {
         while (!IsAtEnd())
         {
-            _stmts.Add(Declaration());
+            try
+            {
+                var declaration = Declaration();
+                _stmts.Add(declaration);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Synchronize();
+            }
         }
 
         return _stmts;
@@ -21,7 +30,6 @@ public class ParserController(List<Token> tokens)
 
     private Stmt Declaration()
     {
-        //TODO catch parsing errors and synchronize
         MatchNewlines();
         if (Match(TokenType.Fn))
         {
@@ -231,10 +239,10 @@ public class ParserController(List<Token> tokens)
                 ParseIdentifier(token),
 
             TokenType.Minus =>
-                new Expr.Unary(token, ParseExpression(Precedence.Unary)),
+                new Expr.Unary(token, ParseExpression((int)PrecedenceEnum.Unary)),
             
             TokenType.Exclamation =>
-                new Expr.Unary(token, ParseExpression(Precedence.Unary)),
+                new Expr.Unary(token, ParseExpression((int)PrecedenceEnum.Unary)),
 
             TokenType.OpenParen =>
                 ParseGrouping(),
@@ -414,5 +422,28 @@ public class ParserController(List<Token> tokens)
     private Exception Error(Token token, string message)
     {
         return new Exception($"[Line {token.Line}:{token.Column}] Error at '{token.Text}': {message}");
+    }
+
+    private void Synchronize()
+    {
+        Advance();
+
+        while (!IsAtEnd())
+        {
+            if (Previous().Type == TokenType.Newline) return;
+
+            switch (Peek().Type)
+            {
+                case TokenType.Fn:
+                case TokenType.For:
+                case TokenType.If:
+                case TokenType.Printf:
+                case TokenType.Return:    
+                    return;
+                default:
+                    Advance();
+                    break;
+            }
+        }
     }
 }

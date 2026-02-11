@@ -352,13 +352,16 @@ public class CodeGen(List<Stmt> ast)
             argCode.Add(arg.LiteralValue ?? $"%{GenExpr(arg)}");
         }
 
+        _ir.Append("  ");
         string returnType = "void";
+        int returnId = -1;
         if (f.Type is not null)
         {
             returnType = f.Type.LLVMName;
+            _ir.Append($"%{_identifier} = "); // If there is a return, we save the value
+            returnId = _identifier++;
         }
-        //TODO if it is void we can't have a %id = call   it needs to be just call
-        _ir.Append($"  %{_identifier} = call {returnType} @{f.Name.Text}(");
+        _ir.Append($"call {returnType} @{f.Name.Text}(");
         for (int i = 0; i < argCode.Count; i++)
         {
             if (i > 0)
@@ -369,6 +372,6 @@ public class CodeGen(List<Stmt> ast)
         }
         _ir.AppendLine(")");
         
-        return _identifier++;
+        return returnId;
     }
 }

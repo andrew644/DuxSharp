@@ -146,7 +146,7 @@ public class LexerController(string file)
                     }
                     else
                     {
-                        //TODO error
+                        throw new Exception($"unexpected character '{c}'");
                     }
                     break;
             }
@@ -206,8 +206,7 @@ public class LexerController(string file)
 
         if (Peek() == '\0')
         {
-            //TODO error
-            return;
+            throw new Exception($"unexpected end of string");
         }
         
         Advance(); //closing "
