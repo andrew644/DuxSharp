@@ -258,6 +258,27 @@ public class CodeGen(List<Stmt> ast)
 
     private int GenAssign(Expr.Assign e)
     {
+        Expr RValue = e.Value;
+        switch (e.Op.Type)
+        {
+            case TokenType.PlusEquals:
+                RValue = new Expr.Binary(e.LValue, new Token("+", -1, -1, TokenType.Plus), e.Value);
+                break;
+            case TokenType.MinusEquals:
+                RValue = new Expr.Binary(e.LValue, new Token("-", -1, -1, TokenType.Minus), e.Value);
+                break;
+            case TokenType.StarEquals:
+                RValue = new Expr.Binary(e.LValue, new Token("*", -1, -1, TokenType.Star), e.Value);
+                break;
+            case TokenType.SlashEquals:
+                RValue = new Expr.Binary(e.LValue, new Token("/", -1, -1, TokenType.SlashEquals), e.Value);
+                break;
+            case TokenType.Equals:
+                break;
+            default:
+                throw new Exception($"Unsupported token type {e.Op.Type}");
+        }
+        
         string lvalueName;
         switch (e.LValue)
         {
@@ -268,7 +289,7 @@ public class CodeGen(List<Stmt> ast)
                 lvalueName = lvalue.Name.Text;
                 break;
             default:
-                throw new Exception("Unsupported lvalue");
+                throw new Exception($"Unsupported lvalue {e.LValue.Type}");
         }
         //TODO support arr[5]
         
@@ -276,37 +297,11 @@ public class CodeGen(List<Stmt> ast)
         if (type is null) throw new Exception($"var {lvalueName} not found");
 
         string value = "";
-        int finalId = -1; //TODO this doesn't work if we want a = b = 1
-        if (e.Op.Type is not TokenType.Equals)
-        {
-            // += -= *= /= ...
-            _ir.AppendLine($"  %{_identifier} = load {type.LLVMName}, ptr %{lvalueName}");
-            _identifier++;
-            value = e.Value.LiteralValue ?? $"%{finalId = GenExpr(e.Value)}";
-            switch (e.Op.Type)
-            {
-                case TokenType.PlusEquals:
-                    _ir.AppendLine($"  %{_identifier} = add nsw {e.Type.LLVMName} %{_identifier - 1}, {value}");
-                    break;
-                case TokenType.MinusEquals:
-                    _ir.AppendLine($"  %{_identifier} = sub nsw {e.Type.LLVMName} %{_identifier - 1}, {value}");
-                    break;
-                case TokenType.StarEquals:
-                    _ir.AppendLine($"  %{_identifier} = mul nsw {e.Type.LLVMName} %{_identifier - 1}, {value}");
-                    break;
-                case TokenType.SlashEquals:
-                    _ir.AppendLine($"  %{_identifier} = sdiv {e.Type.LLVMName} %{_identifier - 1}, {value}");
-                    break;
-                default:
-                    throw new NotImplementedException($"{e.Op.Type} not implemented");
-            }
-            _ir.AppendLine($"  store {type.LLVMName} %{_identifier}, ptr %{lvalueName}");
-            _identifier++;
-            return finalId;
-        }
+        int finalId = -1; //TODO this doesn't work if we want a = b = 1 // I think we can return lvalue's name in this case
         
-        value = e.Value.LiteralValue ?? $"%{finalId = GenExpr(e.Value)}";
+        value = RValue.LiteralValue ?? $"%{finalId = GenExpr(RValue)}";
         _ir.AppendLine($"  store {type.LLVMName} {value}, ptr %{lvalueName}");
+        
         return finalId;
     }
 
@@ -315,7 +310,7 @@ public class CodeGen(List<Stmt> ast)
         string leftValue = e.Left.LiteralValue ?? $"%{GenExpr(e.Left)}";
         string rightValue = e.Right.LiteralValue ?? $"%{GenExpr(e.Right)}";
         string operation;
-        switch (e.Operator.Type)
+        switch (e.Op.Type)
         {
             case TokenType.Plus:
                 operation = "add nsw";
@@ -357,7 +352,7 @@ public class CodeGen(List<Stmt> ast)
                 operation = "or";
                 break;
             default:
-                throw new NotImplementedException();
+                throw new NotImplementedException($"{e.Op.Type} not implemented.");
         }
         _ir.AppendLine($"  %{_identifier} = {operation} {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
 

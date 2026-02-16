@@ -150,7 +150,7 @@ public class SemanticAnalyzer(List<Stmt> stmts)
     {
         var ltype = AnExpr(e.Left);
         var rtype = AnExpr(e.Right);
-        var otype = e.Operator.Type switch
+        var otype = e.Op.Type switch
         {
             TokenType.DoubleEquals
                 or TokenType.ExclamationEquals

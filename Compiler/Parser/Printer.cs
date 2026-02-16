@@ -32,7 +32,7 @@ public static class Printer
 
             Expr.Binary b =>
                 Parenthesize(
-                    b.Operator.Text,
+                    b.Op.Text,
                     Print(b.Left),
                     Print(b.Right)
                 ),
