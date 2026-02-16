@@ -1,0 +1,11 @@
+fn main() -> i32 {
+	i := -1
+	if i < 0 {
+		printf("success: %d\n", i)
+	}
+
+	i = -i
+	printf("success: %d\n", i)
+
+	return 0
+}

@@ -1,11 +1,19 @@
 using System.Diagnostics;
 using JetBrains.Annotations;
+using Xunit.Abstractions;
 
 namespace Tests.EndToEndTests;
 
 [TestSubject(typeof(Compiler.Entry))]
 public class TestAll
 {
+    private readonly ITestOutputHelper _testOutputHelper;
+
+    public TestAll(ITestOutputHelper testOutputHelper)
+    {
+        _testOutputHelper = testOutputHelper;
+    }
+
     static (int ExitCode, string StdOut, string StdErr) RunProcess(string file, string args)
     {
         var psi = new ProcessStartInfo
@@ -32,6 +40,7 @@ public class TestAll
     [InlineData("simple1", 42)]
     [InlineData("simple2", 43)]
     [InlineData("void_function", 0)]
+    [InlineData("negative", 0)]
     public void RunTests(string name, int expectedExitCode)
     {
         const string baseDir = "../../../../";
@@ -43,11 +52,16 @@ public class TestAll
         
         RunProcess("mkdir", $"-p {outDir}"); // make sure out directory exists
 
-        var (exitCode, _, stdErr) = RunProcess($"{baseDir}Compiler/bin/Debug/net10.0/Compiler", $"{srcPath} {irPath}");
+        var (exitCode, stdOut, stdErr) = RunProcess($"{baseDir}Compiler/bin/Debug/net10.0/Compiler", $"{srcPath} {irPath}");
+        _testOutputHelper.WriteLine(stdOut);
+        _testOutputHelper.WriteLine(stdErr);
         Assert.Equal("", stdErr);
         Assert.Equal(0, exitCode);
         
         var (clangExitCode, clangStdOut, clangStdErr) = RunProcess($"clang", $"-o {binPath} {irPath}");
+        _testOutputHelper.WriteLine(clangStdOut);
+        _testOutputHelper.WriteLine(clangStdErr);
+        _testOutputHelper.WriteLine(stdErr);
         Assert.Equal("", clangStdErr);
         Assert.Equal("", clangStdOut);
         Assert.Equal(0, clangExitCode);

@@ -236,6 +236,8 @@ public class CodeGen(List<Stmt> ast)
                 return GenAssign(e);
             case Expr.Binary e:
                 return GenBinary(e);
+            case Expr.Unary e:
+                return GenUnary(e);
             case Expr.FunctionCall e:
                 return GenFunctionCall(e);
             default:
@@ -277,6 +279,7 @@ public class CodeGen(List<Stmt> ast)
         int finalId = -1; //TODO this doesn't work if we want a = b = 1
         if (e.Op.Type is not TokenType.Equals)
         {
+            // += -= *= /= ...
             _ir.AppendLine($"  %{_identifier} = load {type.LLVMName}, ptr %{lvalueName}");
             _identifier++;
             value = e.Value.LiteralValue ?? $"%{finalId = GenExpr(e.Value)}";
@@ -357,6 +360,24 @@ public class CodeGen(List<Stmt> ast)
                 throw new NotImplementedException();
         }
         _ir.AppendLine($"  %{_identifier} = {operation} {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+
+        return _identifier++;
+    }
+
+    private int GenUnary(Expr.Unary e)
+    {
+        string rightValue = e.Right.LiteralValue ?? $"%{GenExpr(e.Right)}";
+        string operation;
+        switch (e.Op.Type)
+        {
+            case TokenType.Minus:
+                operation = "sub nsw";
+                break;
+            default:
+                throw new NotImplementedException();
+        }
+        
+        _ir.AppendLine($"  %{_identifier} = {operation} {e.Right.Type.LLVMName} 0, {rightValue}");
 
         return _identifier++;
     }
