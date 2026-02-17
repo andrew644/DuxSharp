@@ -20,10 +20,6 @@ public static class Entry
         string text = File.ReadAllText(args[0]);
         var lexerController = new LexerController(text);
         List<Token> tokens = lexerController.Lex();
-        foreach (var token in tokens)
-        {
-            Console.WriteLine(token);
-        }
         
         Console.WriteLine("\nParsing:");
         var parser = new ParserController(tokens);

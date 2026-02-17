@@ -243,6 +243,8 @@ public class CodeGen(List<Stmt> ast)
                 return GenBinary(e);
             case Expr.Unary e:
                 return GenUnary(e);
+            case Expr.Grouping e:
+                return GenGrouping(e);
             case Expr.FunctionCall e:
                 return GenFunctionCall(e);
             case Expr.ArrayIndex e:
@@ -390,6 +392,11 @@ public class CodeGen(List<Stmt> ast)
         _ir.AppendLine($"  %{_identifier} = {operation} {e.Right.Type.LLVMName} 0, {rightValue}");
 
         return _identifier++;
+    }
+
+    private int GenGrouping(Expr.Grouping e)
+    {
+        return GenExpr(e.Expression);
     }
 
     private int GenFunctionCall(Expr.FunctionCall f)

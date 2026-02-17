@@ -10,3 +10,7 @@
 - Defer
 - Heap alloc
 - Structs
+
+
+### Bugs
+- multiple returns from a function doesn't work
