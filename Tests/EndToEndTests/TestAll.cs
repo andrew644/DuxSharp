@@ -41,6 +41,7 @@ public class TestAll
     [InlineData("simple2", 43)]
     [InlineData("void_function", 0)]
     [InlineData("negative", 0)]
+    [InlineData("array", 0)]
     public void RunTests(string name, int expectedExitCode)
     {
         const string baseDir = "../../../../";

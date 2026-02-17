@@ -13,3 +13,4 @@ Supported features:
 - If statements
 - i32 variables
 - Formatted output (printf)
+- Arrays

@@ -4,7 +4,7 @@
 - Add line/column number to errors from semantic analyser and codegen
 
 ### Features to support
-- Arrays
+- Arrays passed to functions
 - Pointers
 - Enum
 - Defer

@@ -1,10 +1,10 @@
 fn main() -> i32 {
-
-	i: i32
-
 	arr: [8]i32
-
+	for i := 0, i < 8, i += 1 {
+		arr[i] = i + 2
+		printf("%d\n", arr[i])
+	}
 	arr[2] = 5
-
+	printf("%d\n", arr[2])
 	return 0
 }

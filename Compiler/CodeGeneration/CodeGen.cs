@@ -133,7 +133,12 @@ public class CodeGen(List<Stmt> ast)
     {
         ExprType type = vd.Type ?? vd.Value.Type;
         _scope.AddVar(vd.Name.Text, type);
-        _ir.Append($"  %{vd.Name.Text} = alloca {type.LLVMName}\n");
+        string llvmName = type.LLVMName;
+        if (type.ArraySize > 0)
+        {
+            llvmName = $"[{type.ArraySize} x {type.LLVMName}]";
+        }
+        _ir.Append($"  %{vd.Name.Text} = alloca {llvmName}\n");
         
         if (vd.Value is null) return;
         string value = vd.Value.LiteralValue ?? $"%{GenExpr(vd.Value)}";
@@ -240,6 +245,8 @@ public class CodeGen(List<Stmt> ast)
                 return GenUnary(e);
             case Expr.FunctionCall e:
                 return GenFunctionCall(e);
+            case Expr.ArrayIndex e:
+                return GenArrayIndexRValue(e);
             default:
                 throw new NotImplementedException(expr.GetType().Name);
         }
@@ -278,29 +285,37 @@ public class CodeGen(List<Stmt> ast)
             default:
                 throw new Exception($"Unsupported token type {e.Op.Type}");
         }
-        
-        string lvalueName;
+
+        return GenAssignEquals(new Expr.Assign(e.LValue, RValue, e.Op)
+        {
+            Type = e.Type
+        });
+    }
+
+    private int GenAssignEquals(Expr.Assign e)
+    {
+        string lValueName;
+        ExprType? type;
         switch (e.LValue)
         {
-            case Expr.Variable lvalue:
-                lvalueName = lvalue.Name.Text;
+            case Expr.Variable lValue:
+                lValueName = lValue.Name.Text;
+                type = _scope.GetVar(lValueName);
                 break;
-            case Expr.ArrayIndex lvalue:
-                lvalueName = lvalue.Name.Text;
+            case Expr.ArrayIndex lValue:
+                lValueName = GenArrayIndex(lValue).ToString();
+                type = _scope.GetVar(lValue.Name.Text);
                 break;
             default:
                 throw new Exception($"Unsupported lvalue {e.LValue.Type}");
         }
-        //TODO support arr[5]
         
-        ExprType? type = _scope.GetVar(lvalueName);
-        if (type is null) throw new Exception($"var {lvalueName} not found");
+        if (type is null) throw new Exception($"var {lValueName} not found");
 
-        string value = "";
         int finalId = -1; //TODO this doesn't work if we want a = b = 1 // I think we can return lvalue's name in this case
         
-        value = RValue.LiteralValue ?? $"%{finalId = GenExpr(RValue)}";
-        _ir.AppendLine($"  store {type.LLVMName} {value}, ptr %{lvalueName}");
+        string value = e.Value.LiteralValue ?? $"%{finalId = GenExpr(e.Value)}";
+        _ir.AppendLine($"  store {type.LLVMName} {value}, ptr %{lValueName}");
         
         return finalId;
     }
@@ -406,5 +421,22 @@ public class CodeGen(List<Stmt> ast)
         _ir.AppendLine(")");
         
         return returnId;
+    }
+
+    private int GenArrayIndex(Expr.ArrayIndex e)
+    {
+        string indexId = e.Index.LiteralValue ?? $"%{GenExpr(e.Index)}";
+        _ir.AppendLine($"  %{_identifier} = sext {e.Index.Type.LLVMName} {indexId} to i64");
+        indexId = $"%{_identifier}";
+        _identifier++;
+        _ir.AppendLine($"  %{_identifier} = getelementptr inbounds [{e.Type.ArraySize} x {e.Type.LLVMName}], ptr %{e.Name.Text}, i64 0, i64 {indexId}");
+        return _identifier++;
+    }
+
+    private int GenArrayIndexRValue(Expr.ArrayIndex e)
+    {
+        int id = GenArrayIndex(e);
+        _ir.AppendLine($"  %{_identifier} = load {e.Type.LLVMName}, ptr %{id}");
+        return _identifier++;
     }
 }

@@ -366,7 +366,7 @@ public class ParserController(List<Token> tokens)
         if (type is null) throw Error(typeToken, $"Could not parse type {typeToken.Text}.");
         if (arraySize > 0)
         {
-            return new ExprType($"[{arraySize} x {type.LLVMName}]", arraySize);
+            return new ExprType(type.LLVMName, arraySize);
         }
         return type;
     }
