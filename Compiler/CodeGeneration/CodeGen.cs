@@ -90,9 +90,9 @@ public class CodeGen(List<Stmt> ast)
         foreach (var arg in function.Args)
         {
             if (!first) _ir.Append(", ");
-            _ir.Append($"{arg.type.LLVMName} %{_identifier}");
+            _ir.Append($"{arg.type.LLVMName} %id.{_identifier}");
             argsAlloca.AppendLine($"  %{arg.name.Text} = alloca {arg.type.LLVMName}");
-            argsAlloca.AppendLine($"  store {arg.type.LLVMName} %{_identifier}, ptr %{arg.name.Text}");
+            argsAlloca.AppendLine($"  store {arg.type.LLVMName} %id.{_identifier}, ptr %{arg.name.Text}");
             _scope.AddVar(arg.name.Text, arg.type);
             _identifier++;
             first = false;
@@ -112,6 +112,7 @@ public class CodeGen(List<Stmt> ast)
         {
             _ir.AppendLine("  ret void");
         }
+        _ir.AppendLine("  unreachable");
         _ir.AppendLine("}");
     }
 
@@ -125,8 +126,10 @@ public class CodeGen(List<Stmt> ast)
 
     private void GenReturn(Stmt.ReturnStmt r)
     {
-        string value = r.Expr.LiteralValue ?? $"%{GenExpr(r.Expr)}";
+        string value = r.Expr.LiteralValue ?? $"%id.{GenExpr(r.Expr)}";
         _ir.AppendLine($"  ret {r.Expr.Type.LLVMName} {value}");
+        _ir.AppendLine($"hidden_basic_block.{_identifier++}:");
+        _ir.AppendLine("  unreachable");
     }
 
     private void GenVarDeclaration(Stmt.VarDeclaration vd)
@@ -141,19 +144,19 @@ public class CodeGen(List<Stmt> ast)
         _ir.Append($"  %{vd.Name.Text} = alloca {llvmName}\n");
         
         if (vd.Value is null) return;
-        string value = vd.Value.LiteralValue ?? $"%{GenExpr(vd.Value)}";
+        string value = vd.Value.LiteralValue ?? $"%id.{GenExpr(vd.Value)}";
         _ir.AppendLine($"  store {vd.Value.Type.LLVMName} {value}, ptr %{vd.Name.Text}");
     }
 
     private void GenIfStmt(Stmt.IfStmt ifStmt)
     {
         int conditionId = GenExpr(ifStmt.Condition);
-        string jumpBody = $"if_body{_identifier++}";
-        string jumpEnd = $"if_end{_identifier++}";
+        string jumpBody = $"if_body.{_identifier++}";
+        string jumpEnd = $"if_end.{_identifier++}";
         if (ifStmt.Else is not null)
         {
-            string jumpElse = $"else_body{_identifier++}";
-            _ir.AppendLine($"  br i1 %{conditionId}, label %{jumpBody}, label %{jumpElse}");
+            string jumpElse = $"else_body.{_identifier++}";
+            _ir.AppendLine($"  br i1 %id.{conditionId}, label %{jumpBody}, label %{jumpElse}");
             _ir.AppendLine($"{jumpBody}:");
             GenStmt(ifStmt.Body);
             _ir.AppendLine($"  br label %{jumpEnd}");
@@ -164,7 +167,7 @@ public class CodeGen(List<Stmt> ast)
         }
         else
         {
-            _ir.AppendLine($"  br i1 %{conditionId}, label %{jumpBody}, label %{jumpEnd}");
+            _ir.AppendLine($"  br i1 %id.{conditionId}, label %{jumpBody}, label %{jumpEnd}");
             _ir.AppendLine($"{jumpBody}:");
             GenStmt(ifStmt.Body);
             _ir.AppendLine($"  br label %{jumpEnd}");
@@ -174,7 +177,7 @@ public class CodeGen(List<Stmt> ast)
 
     private void GenForStmt(Stmt.ForStmt forStmt)
     {
-        string forBody = $"for_body{_identifier++}";
+        string forBody = $"for_body.{_identifier++}";
         if (forStmt.Condition is null) //infinite loop
         {
             _ir.AppendLine($"  br label %{forBody}");
@@ -185,13 +188,13 @@ public class CodeGen(List<Stmt> ast)
         }
         
         if (forStmt.Start is not null) GenStmt(forStmt.Start);
-        string forCondition = $"for_condition{_identifier++}";
-        string forEnd = $"for_end{_identifier++}";
-        string forIteration = $"for_iteration{_identifier++}";
+        string forCondition = $"for_condition.{_identifier++}";
+        string forEnd = $"for_end.{_identifier++}";
+        string forIteration = $"for_iteration.{_identifier++}";
         _ir.AppendLine($"  br label %{forCondition}");
         _ir.AppendLine($"{forCondition}:");
         int conditionId = GenExpr(forStmt.Condition);
-        _ir.AppendLine($"  br i1 %{conditionId}, label %{forBody}, label %{forEnd}");
+        _ir.AppendLine($"  br i1 %id.{conditionId}, label %{forBody}, label %{forEnd}");
         _ir.AppendLine($"{forBody}:");
         GenStmt(forStmt.Body);
         if (forStmt.Iteration is not null)
@@ -216,9 +219,9 @@ public class CodeGen(List<Stmt> ast)
         List<string> argCode = [];
         foreach (var arg in printfStmt.Args)
         {
-            argCode.Add(arg.LiteralValue ?? $"%{GenExpr(arg)}");
+            argCode.Add(arg.LiteralValue ?? $"%id.{GenExpr(arg)}");
         }
-        _ir.Append($"  %{_identifier++} = call i32 (ptr, ...) @printf(ptr @.str.{id}");
+        _ir.Append($"  %id.{_identifier++} = call i32 (ptr, ...) @printf(ptr @.str.{id}");
         for (int i = 0; i < argCode.Count; i++)
         {
             _ir.Append($", {printfStmt.Args[i].Type.LLVMName} {argCode[i]}");
@@ -261,7 +264,7 @@ public class CodeGen(List<Stmt> ast)
             throw new Exception($"Variable {v.Name.Text} not found");
         }
 
-        _ir.AppendLine($"  %{_identifier} = load {type.LLVMName}, ptr %{v.Name.Text}");
+        _ir.AppendLine($"  %id.{_identifier} = load {type.LLVMName}, ptr %{v.Name.Text}");
         return _identifier++;
     }
 
@@ -305,7 +308,7 @@ public class CodeGen(List<Stmt> ast)
                 type = _scope.GetVar(lValueName);
                 break;
             case Expr.ArrayIndex lValue:
-                lValueName = GenArrayIndex(lValue).ToString();
+                lValueName = $"id.{GenArrayIndex(lValue)}";
                 type = _scope.GetVar(lValue.Name.Text);
                 break;
             default:
@@ -316,7 +319,7 @@ public class CodeGen(List<Stmt> ast)
 
         int finalId = -1; //TODO this doesn't work if we want a = b = 1 // I think we can return lvalue's name in this case
         
-        string value = e.Value.LiteralValue ?? $"%{finalId = GenExpr(e.Value)}";
+        string value = e.Value.LiteralValue ?? $"%id.{finalId = GenExpr(e.Value)}";
         _ir.AppendLine($"  store {type.LLVMName} {value}, ptr %{lValueName}");
         
         return finalId;
@@ -324,8 +327,8 @@ public class CodeGen(List<Stmt> ast)
 
     private int GenBinary(Expr.Binary e)
     {
-        string leftValue = e.Left.LiteralValue ?? $"%{GenExpr(e.Left)}";
-        string rightValue = e.Right.LiteralValue ?? $"%{GenExpr(e.Right)}";
+        string leftValue = e.Left.LiteralValue ?? $"%id.{GenExpr(e.Left)}";
+        string rightValue = e.Right.LiteralValue ?? $"%id.{GenExpr(e.Right)}";
         string operation;
         switch (e.Op.Type)
         {
@@ -371,14 +374,14 @@ public class CodeGen(List<Stmt> ast)
             default:
                 throw new NotImplementedException($"{e.Op.Type} not implemented.");
         }
-        _ir.AppendLine($"  %{_identifier} = {operation} {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
+        _ir.AppendLine($"  %id.{_identifier} = {operation} {e.Left.Type.LLVMName} {leftValue}, {rightValue}");
 
         return _identifier++;
     }
 
     private int GenUnary(Expr.Unary e)
     {
-        string rightValue = e.Right.LiteralValue ?? $"%{GenExpr(e.Right)}";
+        string rightValue = e.Right.LiteralValue ?? $"%id.{GenExpr(e.Right)}";
         string operation;
         switch (e.Op.Type)
         {
@@ -389,7 +392,7 @@ public class CodeGen(List<Stmt> ast)
                 throw new NotImplementedException();
         }
         
-        _ir.AppendLine($"  %{_identifier} = {operation} {e.Right.Type.LLVMName} 0, {rightValue}");
+        _ir.AppendLine($"  %id.{_identifier} = {operation} {e.Right.Type.LLVMName} 0, {rightValue}");
 
         return _identifier++;
     }
@@ -404,7 +407,7 @@ public class CodeGen(List<Stmt> ast)
         List<string> argCode = [];
         foreach (var arg in f.Args)
         {
-            argCode.Add(arg.LiteralValue ?? $"%{GenExpr(arg)}");
+            argCode.Add(arg.LiteralValue ?? $"%id.{GenExpr(arg)}");
         }
 
         _ir.Append("  ");
@@ -413,7 +416,7 @@ public class CodeGen(List<Stmt> ast)
         if (f.Type is not null)
         {
             returnType = f.Type.LLVMName;
-            _ir.Append($"%{_identifier} = "); // If there is a return, we save the value
+            _ir.Append($"%id.{_identifier} = "); // If there is a return, we save the value
             returnId = _identifier++;
         }
         _ir.Append($"call {returnType} @{f.Name.Text}(");
@@ -432,18 +435,18 @@ public class CodeGen(List<Stmt> ast)
 
     private int GenArrayIndex(Expr.ArrayIndex e)
     {
-        string indexId = e.Index.LiteralValue ?? $"%{GenExpr(e.Index)}";
-        _ir.AppendLine($"  %{_identifier} = sext {e.Index.Type.LLVMName} {indexId} to i64");
-        indexId = $"%{_identifier}";
+        string indexId = e.Index.LiteralValue ?? $"%id.{GenExpr(e.Index)}";
+        _ir.AppendLine($"  %id.{_identifier} = sext {e.Index.Type.LLVMName} {indexId} to i64");
+        indexId = $"%id.{_identifier}";
         _identifier++;
-        _ir.AppendLine($"  %{_identifier} = getelementptr inbounds [{e.Type.ArraySize} x {e.Type.LLVMName}], ptr %{e.Name.Text}, i64 0, i64 {indexId}");
+        _ir.AppendLine($"  %id.{_identifier} = getelementptr inbounds [{e.Type.ArraySize} x {e.Type.LLVMName}], ptr %{e.Name.Text}, i64 0, i64 {indexId}");
         return _identifier++;
     }
 
     private int GenArrayIndexRValue(Expr.ArrayIndex e)
     {
         int id = GenArrayIndex(e);
-        _ir.AppendLine($"  %{_identifier} = load {e.Type.LLVMName}, ptr %{id}");
+        _ir.AppendLine($"  %id.{_identifier} = load {e.Type.LLVMName}, ptr %id.{id}");
         return _identifier++;
     }
 }

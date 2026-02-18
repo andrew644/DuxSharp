@@ -43,6 +43,7 @@ public class TestAll
     [InlineData("negative", 0)]
     [InlineData("array", 0)]
     [InlineData("binary_search", 0)]
+    [InlineData("multi_return", 5)]
     public void RunTests(string name, int expectedExitCode)
     {
         const string baseDir = "../../../../";

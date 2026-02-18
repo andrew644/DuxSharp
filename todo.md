@@ -13,4 +13,4 @@
 
 
 ### Bugs
-- multiple returns from a function doesn't work
+- Comments not working properly

@@ -1,0 +1,10 @@
+fn main() -> i32 {
+	i := 5
+	if i == 3 {
+		return 3
+	} else if i == 4 {
+		return 4
+	} else {
+		return 5
+	}
+}
