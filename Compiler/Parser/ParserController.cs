@@ -72,8 +72,8 @@ public class ParserController(List<Token> tokens)
         {
             var argName = Consume(TokenType.Identifier, "Expected argument name.");
             Consume(TokenType.Colon, "Expected ':' after argument name.");
-            var argType = Consume(TokenType.Identifier, "Expected argument type.");
-            args.Add((argName, ExprType.GetType(argType.Text)));
+            var argType = ParseType();
+            args.Add((argName, argType));
             Match(TokenType.Comma); //dangling commas are ok!
         }
         
@@ -354,18 +354,25 @@ public class ParserController(List<Token> tokens)
 
     private ExprType ParseType()
     {
-        int arraySize = 0;
+        int arraySize = -1;
         if (Match(TokenType.OpenSquare))
         {
-            Token arraySizeToken = Consume(TokenType.IntegerLiteral, "Expected array size in [].");
-            arraySize = Convert.ToInt32(arraySizeToken.Text);
+            if (Check(TokenType.IntegerLiteral))
+            {
+                Token arraySizeToken = Consume(TokenType.IntegerLiteral, "Expected array size in [].");
+                arraySize = Convert.ToInt32(arraySizeToken.Text);
+            }
+            else
+            {
+                arraySize = 0;
+            }
             Consume(TokenType.CloseSquare, "Expected closing ].");
         }
 
         Token typeToken = Consume(TokenType.Identifier, "Expected type.");
         ExprType? type = ExprType.GetType(typeToken.Text);
         if (type is null) throw Error(typeToken, $"Could not parse type {typeToken.Text}.");
-        if (arraySize > 0)
+        if (arraySize > -1)
         {
             return new ExprType(type.LLVMName, arraySize);
         }

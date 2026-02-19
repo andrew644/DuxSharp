@@ -38,7 +38,7 @@ public class ExprType
     }
 
     public string LLVMName { get; private set; }
-    public int ArraySize { get; private set; }
+    public int ArraySize { get; private set; } = -1;
 
     public override string ToString()
     {

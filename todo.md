@@ -13,3 +13,4 @@
 
 
 ### Bugs
+- refactor array size code - remove checks to see if it's an array in code gen

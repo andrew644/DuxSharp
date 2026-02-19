@@ -90,9 +90,14 @@ public class CodeGen(List<Stmt> ast)
         foreach (var arg in function.Args)
         {
             if (!first) _ir.Append(", ");
-            _ir.Append($"{arg.type.LLVMName} %id.{_identifier}");
-            argsAlloca.AppendLine($"  %{arg.name.Text} = alloca {arg.type.LLVMName}");
-            argsAlloca.AppendLine($"  store {arg.type.LLVMName} %id.{_identifier}, ptr %{arg.name.Text}");
+            string argLLVMName = arg.type.LLVMName;
+            if (arg.type.ArraySize == 0) //treat passed in arrays as ptr
+            {
+                argLLVMName = "ptr";
+            }
+            _ir.Append($"{argLLVMName} %id.{_identifier}");
+            argsAlloca.AppendLine($"  %{arg.name.Text} = alloca {argLLVMName}");
+            argsAlloca.AppendLine($"  store {argLLVMName} %id.{_identifier}, ptr %{arg.name.Text}");
             _scope.AddVar(arg.name.Text, arg.type);
             _identifier++;
             first = false;
@@ -125,8 +130,6 @@ public class CodeGen(List<Stmt> ast)
     {
         string value = r.Expr.LiteralValue ?? $"%id.{GenExpr(r.Expr)}";
         _ir.AppendLine($"  ret {r.Expr.Type.LLVMName} {value}");
-        _ir.AppendLine($"hidden_basic_block.{_identifier++}:");
-        _ir.AppendLine("  unreachable");
     }
 
     private void GenVarDeclaration(Stmt.VarDeclaration vd)
@@ -261,7 +264,23 @@ public class CodeGen(List<Stmt> ast)
             throw new Exception($"Variable {v.Name.Text} not found");
         }
 
-        _ir.AppendLine($"  %id.{_identifier} = load {type.LLVMName}, ptr %{v.Name.Text}");
+        if (type.ArraySize > -1)
+        {
+            //TODO I don't think we need this
+            string arrayId = v.Name.Text;
+            if (type.ArraySize == 0)
+            {
+                _ir.AppendLine($"  %id.{_identifier} = load ptr, ptr %{v.Name.Text}");
+                arrayId = $"id.{_identifier}";
+                _identifier++;
+            }
+            _ir.AppendLine(
+                $"  %id.{_identifier} = getelementptr inbounds [{type.ArraySize} x {type.LLVMName}], ptr %{arrayId}, i64 0, i64 0");
+        }
+        else
+        {
+            _ir.AppendLine($"  %id.{_identifier} = load {type.LLVMName}, ptr %{v.Name.Text}");
+        }
         return _identifier++;
     }
 
@@ -423,7 +442,12 @@ public class CodeGen(List<Stmt> ast)
             {
                 _ir.Append(", ");
             }
-            _ir.Append($"{f.Args[i].Type.LLVMName} {argCode[i]}");
+            string llvmName = f.Args[i].Type.LLVMName;
+            if (f.Args[i].Type.ArraySize > -1)
+            {
+                llvmName = "ptr";
+            }
+            _ir.Append($"{llvmName} {argCode[i]}");
         }
         _ir.AppendLine(")");
         
@@ -436,7 +460,18 @@ public class CodeGen(List<Stmt> ast)
         _ir.AppendLine($"  %id.{_identifier} = sext {e.Index.Type.LLVMName} {indexId} to i64");
         indexId = $"%id.{_identifier}";
         _identifier++;
-        _ir.AppendLine($"  %id.{_identifier} = getelementptr inbounds [{e.Type.ArraySize} x {e.Type.LLVMName}], ptr %{e.Name.Text}, i64 0, i64 {indexId}");
+        string llvmName = $"[{e.Type.ArraySize} x {e.Type.LLVMName}]";
+        string bounds = ", i64 0";
+        string arrayId = e.Name.Text;
+        if (e.Type.ArraySize == 0)
+        {
+            llvmName = e.Type.LLVMName; //If it's zero size, just use the base type name
+            bounds = "";
+            _ir.AppendLine($"  %id.{_identifier} = load ptr, ptr %{e.Name.Text}");
+            arrayId = $"id.{_identifier}";
+            _identifier++;
+        }
+        _ir.AppendLine($"  %id.{_identifier} = getelementptr inbounds {llvmName}, ptr %{arrayId}{bounds}, i64 {indexId}");
         return _identifier++;
     }
 
