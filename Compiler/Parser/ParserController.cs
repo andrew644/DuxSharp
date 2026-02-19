@@ -21,6 +21,7 @@ public class ParserController(List<Token> tokens)
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
                 Synchronize();
             }
         }
@@ -87,7 +88,7 @@ public class ParserController(List<Token> tokens)
         Scope.AddFunction(name.Text, returnType);
         Consume(TokenType.OpenCurly, "Expected open brace.");
 
-        var body = Block();
+        var body = new Stmt.Block(Block());
         return new Stmt.Function(name, args, body, returnType);
     }
 
@@ -101,7 +102,7 @@ public class ParserController(List<Token> tokens)
         {
             return IfStatement();
         }
-        if (Match(TokenType.OpenSquare))
+        if (Match(TokenType.OpenCurly))
         {
             return new Stmt.Block(Block());
         }
@@ -343,9 +344,9 @@ public class ParserController(List<Token> tokens)
         {
             MatchNewlines();
             statements.Add(Declaration());
+            MatchNewlines();
         }
 
-        MatchNewlines();
         Consume(TokenType.CloseCurly, "Expected '}' after block.");
         MatchNewlines();
         return statements;
@@ -373,9 +374,8 @@ public class ParserController(List<Token> tokens)
 
     private void MatchNewlines()
     {
-        while (Check(TokenType.Newline))
+        while (Match(TokenType.Newline))
         {
-            Advance();
         }
     }
 

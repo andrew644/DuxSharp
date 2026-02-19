@@ -63,7 +63,7 @@ public static class Printer
                     s.Name.Text,
                     Parenthesize("params", s.Args.Select(p => $"{p.name.Text}: {p.type.LLVMName}")),
                     Parenthesize("returns", s.ReturnType is not null ? s.ReturnType.LLVMName : "void"),
-                    Parenthesize("body", s.Body.Select(Print))
+                    Parenthesize("body", Print(s.Body))
                 ),
             
             Stmt.IfStmt s =>

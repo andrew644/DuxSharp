@@ -103,10 +103,7 @@ public class CodeGen(List<Stmt> ast)
         // Body
         _ir.AppendLine(") {");
         _ir.AppendLine(argsAlloca.ToString());
-        foreach (var stmt in function.Body)
-        {
-            GenStmt(stmt);
-        }
+        GenStmt(function.Body);
 
         if (function.ReturnType is null)
         {

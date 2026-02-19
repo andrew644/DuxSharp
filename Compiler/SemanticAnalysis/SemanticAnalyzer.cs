@@ -69,11 +69,8 @@ public class SemanticAnalyzer(List<Stmt> stmts)
         {
             _scope.AddVar(arg.name.Text, arg.type);
         }
-
-        foreach (var stmt in f.Body)
-        {
-            AnStmt(stmt);
-        }
+        
+        AnStmt(f.Body);
     }
 
     private void AnVarDeclaration(Stmt.VarDeclaration v)
