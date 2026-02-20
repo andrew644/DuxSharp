@@ -80,7 +80,13 @@ public class CodeGen(List<Stmt> ast)
         _scope = new Scope();
         
         _ir.Append("define ");
-        _ir.Append(function.ReturnType is not null ? function.ReturnType.LLVMName : "void");
+        string returnType = function switch
+        {
+            { ReturnType: not null } => function.ReturnType.LLVMName,
+            { Name.Text: "main" } => "i32",
+            _ => "void",
+        };
+        _ir.Append(returnType);
         _ir.Append($" @{function.Name.Text}(");
         
         // Args
@@ -112,7 +118,12 @@ public class CodeGen(List<Stmt> ast)
 
         if (function.ReturnType is null)
         {
-            _ir.AppendLine("  ret void");
+            string retIr = "ret void";
+            if (function.Name.Text == "main")
+            {
+                retIr = "ret i32 0";
+            }
+            _ir.AppendLine($"  {retIr}");
         }
         _ir.AppendLine("  unreachable");
         _ir.AppendLine("}");

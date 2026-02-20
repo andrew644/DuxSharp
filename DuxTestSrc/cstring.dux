@@ -1,0 +1,14 @@
+fn main() -> i32 {
+
+	hello: [6]u8
+	hello[0] = 72
+	hello[1] = 101
+	hello[2] = 108
+	hello[3] = 108
+	hello[4] = 111
+	hello[5] = 0
+
+	printf("%s\n", hello)
+
+	return 0
+}
