@@ -46,6 +46,7 @@ public class TestAll
     [InlineData("multi_return", 5)]
     [InlineData("comments", 0)]
     [InlineData("cstring", 0)]
+    [InlineData("struct", 0)]
     public void RunTests(string name, int expectedExitCode)
     {
         const string baseDir = "../../../../";

@@ -32,6 +32,9 @@ public class SemanticAnalyzer(List<Stmt> stmts)
             case Stmt.VarDeclaration s:
                 AnVarDeclaration(s);
                 break;
+            case Stmt.StructDeclaration s:
+                AnStructDeclaration(s);
+                break;
             case Stmt.ReturnStmt s:
                 AnReturnStmt(s);
                 break;
@@ -83,6 +86,13 @@ public class SemanticAnalyzer(List<Stmt> stmts)
         ExprType type = v.Type ?? v.Value.Type;
         
         _scope.AddVar(v.Name.Text, type);
+    }
+
+    private void AnStructDeclaration(Stmt.StructDeclaration s)
+    {
+        _scope.AddStruct(s.Name.Text, s.Fields.ToDictionary(
+            x => x.Key.Text,
+            x => x.Value));
     }
 
     private void AnReturnStmt(Stmt.ReturnStmt r)

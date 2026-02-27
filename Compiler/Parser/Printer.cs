@@ -66,6 +66,13 @@ public static class Printer
                     Parenthesize("body", Print(s.Body))
                 ),
             
+            Stmt.StructDeclaration s =>
+                Parenthesize(
+                    "struct",
+                    s.Name.Text,
+                    Parenthesize("fields", s.Fields.Select(f => $"{f.Key.Text}: {f.Value.LLVMName}"))
+                ),
+            
             Stmt.IfStmt s =>
                 Parenthesize(
                     "if",

@@ -36,6 +36,11 @@ public class ParserController(List<Token> tokens)
         {
             return FunctionDeclaration();
         }
+
+        if (Match(TokenType.Struct))
+        {
+            return StructDeclaration();
+        }
         
         if (CheckAhead(TokenType.Identifier, TokenType.ColonEquals) 
             || CheckAhead(TokenType.Identifier, TokenType.Colon))
@@ -60,6 +65,25 @@ public class ParserController(List<Token> tokens)
         Consume(TokenType.Newline, "Expected newline at end of statement.");
         //TODO support   duckCount : i32 = 5
         return new Stmt.VarDeclaration(name, null, type);
+    }
+
+    private Stmt StructDeclaration()
+    {
+        var name = Consume(TokenType.Identifier, "Expected struct name.");
+        var fields = new Dictionary<Token, ExprType>();
+        Consume(TokenType.OpenCurly, "Expected { after struct name.");
+        while (!Check(TokenType.CloseCurly))
+        {
+            MatchNewlines();
+            var fieldName = Consume(TokenType.Identifier, "Expected field name.");
+            Consume(TokenType.Colon, "Expected ':' after field name.");
+            var fieldType = ParseType();
+            fields.Add(fieldName, fieldType);
+            Match(TokenType.Comma); //dangling commas are ok!
+            MatchNewlines();
+        }
+        Consume(TokenType.CloseCurly, "Expected } at end of struct.");
+        return new Stmt.StructDeclaration(name, fields);
     }
 
     private Stmt FunctionDeclaration()

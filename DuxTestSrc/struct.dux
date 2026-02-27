@@ -1,0 +1,9 @@
+struct Duck {
+	quack: i32,
+	speed: i32,
+	bread: i32,
+}
+
+fn main() {
+
+}
