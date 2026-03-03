@@ -70,7 +70,7 @@ public static class Printer
                 Parenthesize(
                     "struct",
                     s.Name.Text,
-                    Parenthesize("fields", s.Fields.Select(f => $"{f.Key.Text}: {f.Value.LLVMName}"))
+                    Parenthesize("fields", s.Fields.Select(f => $"{f.Key.Text}: {f.Value.Type.LLVMName}"))
                 ),
             
             Stmt.IfStmt s =>

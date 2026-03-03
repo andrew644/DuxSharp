@@ -54,6 +54,9 @@ public class CodeGen(List<Stmt> ast)
             case Stmt.VarDeclaration s:
                 GenVarDeclaration(s);
                 break;
+            case Stmt.StructDeclaration s:
+                GenStructDeclaration(s);
+                break;
             case Stmt.Block s:
                 GenBlock(s);
                 break;
@@ -157,6 +160,23 @@ public class CodeGen(List<Stmt> ast)
         if (vd.Value is null) return;
         string value = vd.Value.LiteralValue ?? $"%id.{GenExpr(vd.Value)}";
         _ir.AppendLine($"  store {vd.Value.Type.LLVMName} {value}, ptr %{vd.Name.Text}");
+    }
+
+    private void GenStructDeclaration(Stmt.StructDeclaration sd)
+    {
+        _ir.Append($"%struct.{sd.Name.Text} = type {{ ");
+        var fieldTypes = new string[sd.Fields.Count];
+        foreach (var (key, value) in sd.Fields)
+        {
+            fieldTypes[value.Index] = value.Type.LLVMName;
+        }
+
+        foreach (var type in fieldTypes)
+        {
+            _ir.Append($"{type}, ");
+        }
+        _ir.Remove(_ir.Length - 2, 2); // Remove the last comma and space.
+        _ir.AppendLine(" }");
     }
 
     private void GenIfStmt(Stmt.IfStmt ifStmt)

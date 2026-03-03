@@ -70,7 +70,7 @@ public class ParserController(List<Token> tokens)
     private Stmt StructDeclaration()
     {
         var name = Consume(TokenType.Identifier, "Expected struct name.");
-        var fields = new Dictionary<Token, ExprType>();
+        var fields = new Dictionary<Token, StructField>();
         Consume(TokenType.OpenCurly, "Expected { after struct name.");
         while (!Check(TokenType.CloseCurly))
         {
@@ -78,7 +78,8 @@ public class ParserController(List<Token> tokens)
             var fieldName = Consume(TokenType.Identifier, "Expected field name.");
             Consume(TokenType.Colon, "Expected ':' after field name.");
             var fieldType = ParseType();
-            fields.Add(fieldName, fieldType);
+            int fieldIndex = fields.Count;
+            fields.Add(fieldName, new StructField(fieldType, fieldIndex));
             Match(TokenType.Comma); //dangling commas are ok!
             MatchNewlines();
         }

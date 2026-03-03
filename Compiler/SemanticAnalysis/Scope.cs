@@ -7,7 +7,7 @@ public class Scope
 {
     private readonly Dictionary<string, ExprType> _environmentVar = new Dictionary<string, ExprType>();
     private readonly Dictionary<string, ExprType> _environmentFunc = new Dictionary<string, ExprType>();
-    private readonly Dictionary<string, Dictionary<string, ExprType>> _environmentStruct = new Dictionary<string, Dictionary<string, ExprType>>();
+    private readonly Dictionary<string, Dictionary<string, StructField>> _environmentStruct = new Dictionary<string, Dictionary<string, StructField>>();
 
     public void AddVar(string name, ExprType type)
     {
@@ -39,16 +39,16 @@ public class Scope
         return null;
     }
 
-    public void AddStruct(string name, Dictionary<string, ExprType> fields)
+    public void AddStruct(string name, Dictionary<string, StructField> fields)
     {
         _environmentStruct[name] = fields;
     }
 
-    public ExprType? GetStructField(string structName, string fieldName)
+    public StructField? GetStructField(string structName, string fieldName)
     {
-        if (_environmentStruct.TryGetValue(structName, out Dictionary<string, ExprType> fields))
+        if (_environmentStruct.TryGetValue(structName, out Dictionary<string, StructField> fields))
         {
-            if (fields.TryGetValue(fieldName, out ExprType result))
+            if (fields.TryGetValue(fieldName, out StructField result))
             {
                 return result;
             }
